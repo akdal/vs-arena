@@ -5,7 +5,7 @@
  * Main React Flow visualization component
  */
 
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
 import {
   ReactFlow,
   Background,
@@ -31,7 +31,8 @@ export function DebateFlowCanvas({
   run,
   autoStart = false,
 }: DebateFlowCanvasProps) {
-  const { fitView } = useReactFlow();
+  const { fitView, setCenter, getNode } = useReactFlow();
+  const prevPhaseRef = useRef<string | null>(null);
 
   const {
     nodes,
@@ -45,8 +46,10 @@ export function DebateFlowCanvas({
   } = useDebateFlow({
     run,
     onLayoutChange: () => {
-      // Fit view after layout change
-      setTimeout(() => fitView({ padding: 0.2, duration: 300 }), 50);
+      // Only fitView for the first node (topic), auto-scroll handles the rest
+      if (nodes.length <= 1) {
+        setTimeout(() => fitView({ padding: 0.2, duration: 300 }), 50);
+      }
     },
   });
 
@@ -61,6 +64,28 @@ export function DebateFlowCanvas({
   useEffect(() => {
     setTimeout(() => fitView({ padding: 0.2 }), 100);
   }, [fitView]);
+
+  // Auto-scroll to current phase when it changes
+  useEffect(() => {
+    if (currentPhase && currentPhase !== prevPhaseRef.current) {
+      prevPhaseRef.current = currentPhase;
+
+      // Small delay to allow layout to settle
+      setTimeout(() => {
+        const node = getNode(currentPhase);
+        if (node) {
+          // Calculate node center (from layout.ts: default nodeWidth=320, nodeHeight=150)
+          const nodeWidth = 320;
+          const nodeHeight = 150;
+          const x = node.position.x + nodeWidth / 2;
+          const y = node.position.y + nodeHeight / 2;
+
+          // Smooth pan to node center
+          setCenter(x, y, { duration: 500, zoom: 1 });
+        }
+      }, 100);
+    }
+  }, [currentPhase, getNode, setCenter]);
 
   const formatPhase = (phase: string | null) => {
     if (!phase) return "Waiting...";

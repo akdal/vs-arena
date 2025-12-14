@@ -108,3 +108,79 @@
 .react-flow__edge-path {
   stroke-width: 2;
 }
+
+/* ============================================
+   Phase 2.2: Animation & UX Keyframes
+   ============================================ */
+
+/* Typing cursor blink animation */
+@keyframes blink {
+  0%, 50% {
+    opacity: 1;
+  }
+  51%, 100% {
+    opacity: 0;
+  }
+}
+
+.animate-blink {
+  animation: blink 0.8s infinite;
+}
+
+/* Node streaming glow - Agent A (Blue) */
+@keyframes node-glow-blue {
+  0%, 100% {
+    box-shadow: 0 0 5px 2px rgba(59, 130, 246, 0.4),
+                0 0 10px 4px rgba(59, 130, 246, 0.2);
+  }
+  50% {
+    box-shadow: 0 0 10px 4px rgba(59, 130, 246, 0.6),
+                0 0 20px 8px rgba(59, 130, 246, 0.3);
+  }
+}
+
+/* Node streaming glow - Agent B (Red) */
+@keyframes node-glow-red {
+  0%, 100% {
+    box-shadow: 0 0 5px 2px rgba(239, 68, 68, 0.4),
+                0 0 10px 4px rgba(239, 68, 68, 0.2);
+  }
+  50% {
+    box-shadow: 0 0 10px 4px rgba(239, 68, 68, 0.6),
+                0 0 20px 8px rgba(239, 68, 68, 0.3);
+  }
+}
+
+/* Node streaming glow - Judge (Purple) */
+@keyframes node-glow-purple {
+  0%, 100% {
+    box-shadow: 0 0 5px 2px rgba(168, 85, 247, 0.4),
+                0 0 10px 4px rgba(168, 85, 247, 0.2);
+  }
+  50% {
+    box-shadow: 0 0 10px 4px rgba(168, 85, 247, 0.6),
+                0 0 20px 8px rgba(168, 85, 247, 0.3);
+  }
+}
+
+.animate-node-glow-blue {
+  animation: node-glow-blue 1.5s ease-in-out infinite;
+}
+
+.animate-node-glow-red {
+  animation: node-glow-red 1.5s ease-in-out infinite;
+}
+
+.animate-node-glow-purple {
+  animation: node-glow-purple 1.5s ease-in-out infinite;
+}
+
+/* Edge flow animation */
+@keyframes edge-flow {
+  0% {
+    stroke-dashoffset: 15;
+  }
+  100% {
+    stroke-dashoffset: 0;
+  }
+}

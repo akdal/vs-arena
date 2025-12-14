@@ -2,6 +2,7 @@
 
 import { memo } from "react";
 import { BaseDebateNode } from "./base-debate-node";
+import { StreamingText } from "./streaming-text";
 import type { DebateNodeData } from "../utils/flow-types";
 
 export const RebuttalNode = memo(function RebuttalNode({
@@ -17,7 +18,14 @@ export const RebuttalNode = memo(function RebuttalNode({
       isComplete={data.isComplete}
     >
       <div className="whitespace-pre-wrap leading-relaxed">
-        {data.content || (data.isStreaming ? "..." : "Waiting...")}
+        {data.content ? (
+          <StreamingText
+            content={data.content}
+            isStreaming={data.isStreaming}
+          />
+        ) : (
+          data.isStreaming ? "..." : "Waiting..."
+        )}
       </div>
     </BaseDebateNode>
   );

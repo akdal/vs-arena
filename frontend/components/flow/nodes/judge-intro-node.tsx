@@ -2,6 +2,7 @@
 
 import { memo } from "react";
 import { BaseDebateNode } from "./base-debate-node";
+import { StreamingText } from "./streaming-text";
 import type { DebateNodeData } from "../utils/flow-types";
 
 export const JudgeIntroNode = memo(function JudgeIntroNode({
@@ -18,7 +19,14 @@ export const JudgeIntroNode = memo(function JudgeIntroNode({
       isComplete={data.isComplete}
     >
       <div className="whitespace-pre-wrap leading-relaxed">
-        {data.content || (data.isStreaming ? "..." : "Waiting...")}
+        {data.content ? (
+          <StreamingText
+            content={data.content}
+            isStreaming={data.isStreaming}
+          />
+        ) : (
+          data.isStreaming ? "..." : "Waiting..."
+        )}
       </div>
     </BaseDebateNode>
   );

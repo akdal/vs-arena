@@ -58,7 +58,16 @@ export function useDebateFlow({ run, onLayoutChange }: UseDebateFlowOptions) {
         const { nodes: layoutedNodes, edges: layoutedEdges } =
           getLayoutedElements(updatedNodes, newEdges);
 
-        setEdges(layoutedEdges);
+        // Mark the edge leading to this node as active
+        const activeEdges = layoutedEdges.map((edge) => ({
+          ...edge,
+          data: {
+            ...edge.data,
+            isActive: edge.target === phase,
+          },
+        })) as DebateFlowEdge[];
+
+        setEdges(activeEdges);
         onLayoutChange?.();
 
         return layoutedNodes;
@@ -101,9 +110,21 @@ export function useDebateFlow({ run, onLayoutChange }: UseDebateFlowOptions) {
             : node
         ) as DebateFlowNode[]
       );
+
+      // Clear active state from all edges
+      setEdges((eds) =>
+        eds.map((edge) => ({
+          ...edge,
+          data: {
+            ...edge.data,
+            isActive: false,
+          },
+        })) as DebateFlowEdge[]
+      );
+
       setCurrentPhase(null);
     },
-    [setNodes]
+    [setNodes, setEdges]
   );
 
   // Handle score event

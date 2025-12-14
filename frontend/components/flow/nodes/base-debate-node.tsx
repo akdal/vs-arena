@@ -42,6 +42,12 @@ const agentStyles = {
   },
 };
 
+const streamingStyles = {
+  a: "animate-node-glow-blue ring-blue-400",
+  b: "animate-node-glow-red ring-red-400",
+  judge: "animate-node-glow-purple ring-purple-400",
+};
+
 export const BaseDebateNode = memo(function BaseDebateNode({
   agent,
   title,
@@ -61,7 +67,7 @@ export const BaseDebateNode = memo(function BaseDebateNode({
         "rounded-lg border-2 shadow-md min-w-[280px] max-w-[400px] bg-background",
         styles.border,
         styles.bg,
-        isStreaming && "ring-2 ring-offset-2 ring-yellow-400 animate-pulse",
+        isStreaming && `ring-2 ring-offset-2 ${streamingStyles[agent]}`,
         isComplete && "opacity-90",
         className
       )}

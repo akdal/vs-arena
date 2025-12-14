@@ -51,10 +51,20 @@ export type DebateFlowNode =
   | Node<ScoreNodeData, "score">
   | Node<VerdictNodeData, "verdict">;
 
+// Edge data types
+export interface SequenceEdgeData extends Record<string, unknown> {
+  isActive?: boolean;
+}
+
+export interface TargetEdgeData extends Record<string, unknown> {
+  targetPhase: DebatePhase;
+  isActive?: boolean;
+}
+
 // Custom edge types
 export type DebateFlowEdge =
-  | Edge<Record<string, never>, "sequence">
-  | Edge<{ targetPhase: DebatePhase }, "target">;
+  | Edge<SequenceEdgeData, "sequence">
+  | Edge<TargetEdgeData, "target">;
 
 // Node type mapping from DebatePhase to React Flow node type
 export const nodeTypeMap: Record<DebatePhase, string> = {

@@ -2,6 +2,7 @@
 
 import { memo } from "react";
 import { BaseDebateNode } from "./base-debate-node";
+import { StreamingText } from "./streaming-text";
 import type { DebateNodeData } from "../utils/flow-types";
 import { Badge } from "@/components/ui/badge";
 
@@ -25,7 +26,14 @@ export const OpeningNode = memo(function OpeningNode({
           </Badge>
         )}
         <div className="whitespace-pre-wrap leading-relaxed">
-          {data.content || (data.isStreaming ? "..." : "Waiting...")}
+          {data.content ? (
+            <StreamingText
+              content={data.content}
+              isStreaming={data.isStreaming}
+            />
+          ) : (
+            data.isStreaming ? "..." : "Waiting..."
+          )}
         </div>
       </div>
     </BaseDebateNode>

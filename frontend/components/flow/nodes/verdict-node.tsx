@@ -2,6 +2,7 @@
 
 import { memo } from "react";
 import { BaseDebateNode } from "./base-debate-node";
+import { StreamingText } from "./streaming-text";
 import type { VerdictNodeData } from "../utils/flow-types";
 import { Badge } from "@/components/ui/badge";
 
@@ -10,6 +11,8 @@ export const VerdictNode = memo(function VerdictNode({
 }: {
   data: VerdictNodeData;
 }) {
+  const content = data.content || data.analysis || "";
+
   return (
     <BaseDebateNode
       agent="judge"
@@ -30,7 +33,14 @@ export const VerdictNode = memo(function VerdictNode({
           </Badge>
         )}
         <div className="whitespace-pre-wrap leading-relaxed">
-          {data.content || data.analysis || (data.isStreaming ? "..." : "Waiting...")}
+          {content ? (
+            <StreamingText
+              content={content}
+              isStreaming={data.isStreaming}
+            />
+          ) : (
+            data.isStreaming ? "..." : "Waiting..."
+          )}
         </div>
       </div>
     </BaseDebateNode>
