@@ -77,8 +77,8 @@ async def clone_agent(db: AsyncSession, agent_id: UUID) -> Optional[Agent]:
         agent_id=uuid.uuid4(),
         name=f"{original.name} (Copy)",
         model=original.model,
-        persona_json=original.persona_json.copy(),
-        params_json=original.params_json.copy(),
+        persona_json=original.persona_json.copy() if original.persona_json else {},
+        params_json=original.params_json.copy() if original.params_json else {},
     )
     db.add(cloned)
     await db.commit()

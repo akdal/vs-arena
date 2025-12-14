@@ -1,14 +1,17 @@
 """
 Agent API Endpoints
 """
+import json
 from fastapi import APIRouter, HTTPException, status, Depends
 from sqlalchemy.ext.asyncio import AsyncSession
+from sse_starlette.sse import EventSourceResponse
 from typing import List
 from uuid import UUID
 
 from app.db.database import get_db
 from app.models.schemas import AgentCreate, AgentUpdate, AgentResponse, PreviewRequest
 from app.services import agent_crud
+from app.services.ollama import stream_ollama
 
 router = APIRouter()
 
@@ -97,10 +100,6 @@ async def preview_agent(preview_data: PreviewRequest):
 
     Generates an opening argument for the given topic and position using SSE streaming.
     """
-    from sse_starlette.sse import EventSourceResponse
-    from app.services.ollama import stream_ollama
-    import json
-
     agent_config = preview_data.agent_config
     topic = preview_data.topic
     position = preview_data.position

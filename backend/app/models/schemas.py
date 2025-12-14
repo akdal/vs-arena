@@ -10,8 +10,8 @@ from datetime import datetime
 # Agent Schemas
 class AgentBase(BaseModel):
     """Base agent schema"""
-    name: str = Field(..., max_length=50, description="Agent name")
-    model: str = Field(..., max_length=50, description="Ollama model name")
+    name: str = Field(..., min_length=1, max_length=50, description="Agent name")
+    model: str = Field(..., min_length=1, max_length=50, description="Ollama model name")
     persona_json: Dict[str, Any] = Field(
         default_factory=dict,
         description="Agent persona configuration (role, style, etc.)"
@@ -29,8 +29,8 @@ class AgentCreate(AgentBase):
 
 class AgentUpdate(BaseModel):
     """Schema for updating an agent (all fields optional)"""
-    name: Optional[str] = Field(None, max_length=50)
-    model: Optional[str] = Field(None, max_length=50)
+    name: Optional[str] = Field(None, min_length=1, max_length=50)
+    model: Optional[str] = Field(None, min_length=1, max_length=50)
     persona_json: Optional[Dict[str, Any]] = None
     params_json: Optional[Dict[str, Any]] = None
 
@@ -49,7 +49,7 @@ class AgentResponse(AgentBase):
 class PreviewRequest(BaseModel):
     """Schema for agent preview request"""
     agent_config: AgentCreate = Field(..., description="Agent configuration to preview")
-    topic: str = Field(..., description="Debate topic")
+    topic: str = Field(..., min_length=1, description="Debate topic")
     position: Literal["FOR", "AGAINST"] = Field(..., description="Position to argue")
 
 
@@ -63,7 +63,7 @@ class PreviewResponse(BaseModel):
 # Run Schemas
 class RunCreate(BaseModel):
     """Schema for creating a debate run"""
-    topic: str = Field(..., max_length=500)
+    topic: str = Field(..., min_length=1, max_length=500)
     position_a: Literal["FOR", "AGAINST"]
     position_b: Literal["FOR", "AGAINST"]
     agent_a_id: UUID

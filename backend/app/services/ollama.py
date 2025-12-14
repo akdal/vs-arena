@@ -3,8 +3,9 @@ Ollama Client Service
 Provides wrapper functions for interacting with Ollama API
 """
 import httpx
-from typing import AsyncGenerator, Optional, Dict, Any
+import json
 import logging
+from typing import AsyncGenerator, Optional, Dict, Any
 
 from app.core.config import settings
 
@@ -34,8 +35,8 @@ async def call_ollama(
     Raises:
         httpx.HTTPError: If the request fails
     """
-    temperature = temperature or settings.DEFAULT_TEMPERATURE
-    max_tokens = max_tokens or settings.DEFAULT_MAX_TOKENS
+    temperature = settings.DEFAULT_TEMPERATURE if temperature is None else temperature
+    max_tokens = settings.DEFAULT_MAX_TOKENS if max_tokens is None else max_tokens
 
     payload = {
         "model": model,
@@ -94,8 +95,8 @@ async def stream_ollama(
     Raises:
         httpx.HTTPError: If the request fails
     """
-    temperature = temperature or settings.DEFAULT_TEMPERATURE
-    max_tokens = max_tokens or settings.DEFAULT_MAX_TOKENS
+    temperature = settings.DEFAULT_TEMPERATURE if temperature is None else temperature
+    max_tokens = settings.DEFAULT_MAX_TOKENS if max_tokens is None else max_tokens
 
     payload = {
         "model": model,
@@ -122,7 +123,6 @@ async def stream_ollama(
                 async for line in response.aiter_lines():
                     if line.strip():
                         try:
-                            import json
                             data = json.loads(line)
                             if "response" in data:
                                 yield data["response"]
