@@ -70,6 +70,15 @@ class RunCreate(BaseModel):
     agent_b_id: UUID
     agent_j_id: Optional[UUID] = None
     config_json: Dict[str, Any] = Field(default_factory=dict)
+    rubric_json: Dict[str, Any] = Field(
+        default_factory=lambda: {
+            "argumentation_weight": 35,
+            "rebuttal_weight": 30,
+            "delivery_weight": 20,
+            "strategy_weight": 15
+        },
+        description="Scoring rubric weights"
+    )
 
 
 class RunResponse(BaseModel):
@@ -103,3 +112,34 @@ class TurnResponse(BaseModel):
 
     class Config:
         from_attributes = True
+
+
+# Debate Schemas
+class DebateStartRequest(BaseModel):
+    """Schema for starting a debate"""
+    topic: str = Field(..., min_length=1, max_length=500, description="Debate topic")
+    position_a: Literal["FOR", "AGAINST"] = Field(..., description="Agent A's position")
+    position_b: Literal["FOR", "AGAINST"] = Field(..., description="Agent B's position")
+    agent_a_id: UUID = Field(..., description="Agent A UUID")
+    agent_b_id: UUID = Field(..., description="Agent B UUID")
+    agent_j_id: UUID = Field(..., description="Judge agent UUID")
+    config: Optional[Dict[str, Any]] = Field(
+        default_factory=lambda: {"rounds": 3, "max_tokens_per_turn": 1024},
+        description="Debate configuration"
+    )
+    rubric: Optional[Dict[str, Any]] = Field(
+        default_factory=lambda: {
+            "argumentation_weight": 35,
+            "rebuttal_weight": 30,
+            "delivery_weight": 20,
+            "strategy_weight": 15
+        },
+        description="Scoring rubric weights"
+    )
+
+
+class DebateStartResponse(BaseModel):
+    """Schema for debate start response"""
+    run_id: str = Field(..., description="UUID of the created run")
+    status: str = Field(..., description="Run status (pending)")
+    stream_url: str = Field(..., description="SSE stream URL for real-time updates")

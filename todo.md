@@ -85,40 +85,46 @@
 - [ ] 저장된 Agent 또는 임시 config 지원
 
 ### 1.5 LangGraph Basic Flow
-- [ ] DebateState TypedDict 정의
-- [ ] Turn TypedDict 정의
-- [ ] 기본 노드 구현
-  - [ ] `judge_intro` - Judge 소개
-  - [ ] `opening_a` - Agent A 입론
-  - [ ] `opening_b` - Agent B 입론
-  - [ ] `rebuttal_a` - Agent A 반론
-  - [ ] `rebuttal_b` - Agent B 반론
-  - [ ] `summary_a` - Agent A 요약
-  - [ ] `summary_b` - Agent B 요약
-  - [ ] `judge_verdict` - 최종 판정
-- [ ] StateGraph 구성 및 엣지 연결
-- [ ] 프롬프트 템플릿 작성
-  - [ ] Opening 프롬프트
-  - [ ] Rebuttal 프롬프트 (상대 발언 컨텍스트 포함)
-  - [ ] Summary 프롬프트 (전체 토론 컨텍스트)
-  - [ ] Judge Intro 프롬프트
-  - [ ] Verdict 프롬프트
+- [x] DebateState TypedDict 정의
+- [x] Turn TypedDict 정의
+- [x] 기본 노드 구현 (14 nodes - BP Lite format)
+  - [x] `judge_intro` - Judge 소개
+  - [x] `opening_a` - Agent A 입론
+  - [x] `opening_b` - Agent B 입론
+  - [x] `rebuttal_a` - Agent A 반론
+  - [x] `rebuttal_b` - Agent B 반론
+  - [x] `summary_a` - Agent A 요약
+  - [x] `summary_b` - Agent B 요약
+  - [x] `judge_verdict` - 최종 판정
+  - [x] `score_opening_a` / `score_opening_b` - 입론 채점
+  - [x] `score_rebuttal_a` / `score_rebuttal_b` - 반론 채점
+  - [x] `score_summary_a` / `score_summary_b` - 요약 채점
+- [x] StateGraph 구성 및 엣지 연결
+- [x] 프롬프트 템플릿 작성
+  - [x] Opening 프롬프트
+  - [x] Rebuttal 프롬프트 (상대 발언 컨텍스트 포함)
+  - [x] Summary 프롬프트 (전체 토론 컨텍스트)
+  - [x] Judge Intro 프롬프트
+  - [x] Verdict 프롬프트
+  - [x] Scoring 프롬프트 (Opening/Rebuttal/Summary)
 
 ### 1.6 Debate API
-- [ ] `POST /api/debate/start` - 토론 시작 (Run 생성)
+- [x] `POST /api/debate/start` - 토론 시작 (Run 생성)
 - [ ] `GET /api/runs` - Run 목록 조회
 - [ ] `GET /api/runs/{id}` - Run 상세 조회
 - [ ] `GET /api/runs/{id}/turns` - Turn 목록 조회
 - [ ] `DELETE /api/runs/{id}` - Run 삭제
 
 ### 1.7 SSE Streaming
-- [ ] `GET /api/debate/stream/{runId}` - 토론 스트리밍
-- [ ] SSE 이벤트 타입 구현
-  - [ ] `phase_start` - 단계 시작
-  - [ ] `token` - 토큰 스트리밍
-  - [ ] `phase_end` - 단계 종료
-  - [ ] `error` - 에러 발생
-  - [ ] `run_complete` - 토론 완료
+- [x] `GET /api/debate/stream/{runId}` - 토론 스트리밍
+- [x] SSE 이벤트 타입 구현
+  - [x] `phase_start` - 단계 시작
+  - [x] `token` - 토큰 스트리밍
+  - [x] `phase_end` - 단계 종료
+  - [x] `error` - 에러 발생
+  - [x] `run_complete` - 토론 완료
+  - [x] `score` - 채점 결과
+  - [x] `verdict` - 최종 판정
 - [ ] 연결 관리 (keep-alive, reconnect)
 
 ### 1.8 Frontend - Agent Module (Next.js App Router)
@@ -305,7 +311,7 @@
 | Phase | Status | Progress |
 |-------|--------|----------|
 | Phase 0: Setup | **Completed** | 95% |
-| Phase 1: M1 | Not Started | 0% |
+| Phase 1: M1 | **In Progress** | 55% |
 | Phase 2: M2 | Not Started | 0% |
 | Phase 3: M3 | Not Started | 0% |
 | Phase 4: Polish | Not Started | 0% |
@@ -351,6 +357,71 @@ VS Arena 프로젝트의 기본 인프라 및 개발 환경 구축
 - `/docker-compose.yml` - PostgreSQL 컨테이너 설정
 - `/docker/init.sql` - 데이터베이스 스키마
 - `/README.md` - 프로젝트 문서
+
+### 2025-12-15: Phase 1-M1 LangGraph 기본 플로우 완료
+
+**목표 (Goal)**:
+BP Lite 형식의 토론 오케스트레이션 시스템 구현 - LangGraph 기반 14노드 워크플로우와 SSE 실시간 스트리밍
+
+**구현 내용 (Implementation)**:
+1. **LangGraph 상태 정의**:
+   - `DebateState` TypedDict - 전체 토론 상태 관리
+   - `Turn` TypedDict - 개별 발언 턴 정의
+   - 상태 필드: run_id, topic, positions, agents, config, rubric, turns, scores, winner, verdict
+
+2. **14노드 토론 그래프**:
+   - 6개 Debater 노드: `opening_a`, `opening_b`, `rebuttal_a`, `rebuttal_b`, `summary_a`, `summary_b`
+   - 7개 Judge 노드: `judge_intro`, `score_opening_a`, `score_opening_b`, `score_rebuttal_a`, `score_rebuttal_b`, `score_summary_a`, `score_summary_b`
+   - 1개 Verdict 노드: `judge_verdict`
+   - StateGraph 순차 연결 및 컴파일
+
+3. **SSE 스트리밍 아키텍처**:
+   - `EventSourceResponse` 기반 실시간 스트리밍
+   - 이벤트 타입: `phase_start`, `token`, `phase_end`, `score`, `verdict`, `run_complete`, `error`
+   - Debater 노드: 토큰 단위 스트리밍
+   - Judge 노드: 완료 후 일괄 전송
+
+4. **Ollama 연동 및 오류 처리**:
+   - Exponential backoff 재시도 로직 (최대 3회)
+   - `stream_ollama_with_retry` - 스트리밍 호출
+   - `call_ollama_with_retry` - 동기 호출
+   - JSON 점수 파싱 (3-tier fallback: 전체 JSON -> JSON 블록 -> 기본값)
+
+5. **프롬프트 템플릿**:
+   - Debater 프롬프트: Opening, Rebuttal (상대 발언 컨텍스트), Summary (전체 토론)
+   - Judge 프롬프트: Intro, Scoring (Opening/Rebuttal/Summary), Verdict
+   - Persona 인젝션 지원
+
+6. **데이터베이스 통합**:
+   - Turn 즉시 영속화
+   - Run 상태 업데이트 (pending -> running -> completed/failed)
+   - Run CRUD 서비스 (create_run, get_run_with_agents, update_run_status)
+
+7. **API 엔드포인트**:
+   - `POST /api/debate/start` - 토론 시작 (Run 생성, 에이전트 검증)
+   - `GET /api/debate/stream/{run_id}` - SSE 스트리밍 실행
+
+**결과 (Result)**:
+- BP Lite 형식의 완전한 토론 실행 가능
+- 실시간 토큰 스트리밍으로 프론트엔드 연동 준비 완료
+- 채점 시스템 기본 구조 완성 (가중치 적용, 총점 계산)
+- 오류 발생 시 자동 재시도 및 상태 복구
+
+**관련 파일 (Related Files)**:
+- `/backend/app/graph/state.py` - DebateState, Turn TypedDicts
+- `/backend/app/graph/graph.py` - StateGraph 정의 (14 nodes)
+- `/backend/app/graph/executor.py` - SSE 스트리밍 실행기
+- `/backend/app/graph/nodes/debater.py` - 6개 Debater 노드 함수
+- `/backend/app/graph/nodes/judge.py` - 7개 Judge 노드 함수
+- `/backend/app/graph/nodes/utils.py` - 재시도 로직, JSON 파싱
+- `/backend/app/graph/prompts/debater_prompts.py` - Debater 프롬프트 템플릿
+- `/backend/app/graph/prompts/judge_prompts.py` - Judge 프롬프트 템플릿
+- `/backend/app/services/run_crud.py` - Run CRUD 연산
+- `/backend/app/models/schemas.py` - DebateStartRequest, DebateStartResponse
+- `/backend/app/api/endpoints/debate.py` - POST /start, GET /stream/{run_id}
+- `/backend/app/models/turn.py` - metadata_json 필드 수정 (SQLAlchemy 충돌 해결)
+
+**Commit**: 3c85257 Phase 1-M1: Core backend implementation complete
 
 ---
 

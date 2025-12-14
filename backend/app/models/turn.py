@@ -18,5 +18,6 @@ class Turn(Base):
     role = Column(String(20), nullable=False)
     content = Column(Text, nullable=False)
     targets = Column(JSONB, default=list)
-    metadata = Column(JSONB, default=dict)
+    # Use metadata_json attribute name to avoid SQLAlchemy reserved 'metadata' attribute
+    metadata_json = Column("metadata", JSONB, default=dict)
     created_at = Column(TIMESTAMP, server_default=func.now())

@@ -7,6 +7,59 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.2.0] - 2025-12-15
+
+### Added
+
+#### LangGraph Debate Orchestration (Phase 1-M1)
+- Complete BP Lite debate workflow with 14-node StateGraph
+  - 6 debater nodes (opening, rebuttal, summary for A/B)
+  - 7 judge nodes (intro, 6 scoring nodes)
+  - 1 verdict node for final judgment
+- Real-time SSE token streaming for debater arguments
+- Exponential backoff retry logic for Ollama failures
+- JSON score parsing with three-tier fallback strategy
+
+#### Debate API Endpoints
+- `POST /api/debate/start` - Create and initialize debate run
+  - Agent validation (A, B, Judge)
+  - Position validation (must be opposite)
+  - Run creation with config and rubric
+- `GET /api/debate/stream/{run_id}` - SSE streaming endpoint
+  - `phase_start` - Phase beginning notification
+  - `token` - Real-time token streaming
+  - `phase_end` - Phase completion notification
+  - `score` - Scoring results after each phase
+  - `verdict` - Final judgment announcement
+  - `run_complete` - Debate completion signal
+  - `error` - Error handling events
+
+#### Prompt Templates
+- Debater prompts with persona injection
+  - Opening prompt (topic, position, persona)
+  - Rebuttal prompt (opponent context)
+  - Summary/Whip Speech prompt (full debate context)
+- Judge prompts for structured scoring
+  - Introduction prompt
+  - Scoring prompts (opening/rebuttal/summary criteria)
+  - Verdict prompt with score aggregation
+
+#### Database Integration
+- Run CRUD service (`create_run`, `get_run_with_agents`, `update_run_status`)
+- Immediate turn persistence during execution
+- Run status lifecycle (pending -> running -> completed/failed)
+
+### Changed
+- Updated `Turn` model: `metadata` field renamed to `metadata_json` to avoid SQLAlchemy conflicts
+- Enhanced `schemas.py` with `DebateStartRequest`, `DebateStartResponse`
+- Added `rubric_json` field to `RunCreate` schema
+
+### Technical Details
+- **State Management**: `DebateState` and `Turn` TypedDicts for LangGraph state
+- **Retry Logic**: Max 3 retries with exponential backoff (1s, 2s, 4s)
+- **Score Calculation**: Weighted scoring with configurable rubric (argumentation, rebuttal, delivery, strategy)
+- **Winner Determination**: Score difference threshold of 5 points for DRAW
+
 ## [0.1.0] - 2025-12-15
 
 ### Added
@@ -60,5 +113,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Streaming**: SSE-Starlette 3.0.3
 - **State Management**: TanStack Query 5.90.12
 
-[Unreleased]: https://github.com/your-repo/vs-arena/compare/v0.1.0...HEAD
+[Unreleased]: https://github.com/your-repo/vs-arena/compare/v0.2.0...HEAD
+[0.2.0]: https://github.com/your-repo/vs-arena/compare/v0.1.0...v0.2.0
 [0.1.0]: https://github.com/your-repo/vs-arena/releases/tag/v0.1.0
