@@ -79,21 +79,27 @@ async def get_run_with_agents(db: AsyncSession, run_id: UUID) -> Optional[Dict[s
             "name": agent_a.name,
             "model": agent_a.model,
             "persona_json": agent_a.persona_json,
-            "params_json": agent_a.params_json
+            "params_json": agent_a.params_json,
+            "created_at": agent_a.created_at,
+            "updated_at": agent_a.updated_at
         },
         "agent_b": {
             "agent_id": str(agent_b.agent_id),
             "name": agent_b.name,
             "model": agent_b.model,
             "persona_json": agent_b.persona_json,
-            "params_json": agent_b.params_json
+            "params_json": agent_b.params_json,
+            "created_at": agent_b.created_at,
+            "updated_at": agent_b.updated_at
         },
         "agent_j": {
             "agent_id": str(agent_j.agent_id),
             "name": agent_j.name,
             "model": agent_j.model,
             "persona_json": agent_j.persona_json,
-            "params_json": agent_j.params_json
+            "params_json": agent_j.params_json,
+            "created_at": agent_j.created_at,
+            "updated_at": agent_j.updated_at
         }
     }
 
