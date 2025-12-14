@@ -20,6 +20,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 - Updated TODO.md to reflect actual completion status (sections 1.1-1.4 were already implemented)
+- **Critical**: Added missing `created_at` and `updated_at` fields to agent dictionaries in `get_run_with_agents()`
+  - Fixes Pydantic validation error on `GET /api/debate/runs/{run_id}` endpoint
+  - Agent dictionaries now properly match `AgentResponse` schema requirements
 
 ## [0.2.0] - 2025-12-15
 

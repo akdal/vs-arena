@@ -424,6 +424,52 @@ BP Lite 형식의 토론 오케스트레이션 시스템 구현 - LangGraph 기�
 
 **Commit**: 3c85257 Phase 1-M1: Core backend implementation complete
 
+### 2025-12-15: Phase 1-M1 Run API 완료 - Backend 100% 완성
+
+**목표 (Goal)**:
+Run 관리 API 구현으로 Phase 1-M1 백엔드 완성
+
+**구현 내용 (Implementation)**:
+1. **Run API 엔드포인트 (4개)**:
+   - `GET /api/debate/runs` - Run 목록 조회 (최신순 정렬)
+   - `GET /api/debate/runs/{run_id}` - Run 상세 조회 (에이전트 정보 포함)
+   - `GET /api/debate/runs/{run_id}/turns` - Turn 목록 조회 (리플레이용)
+   - `DELETE /api/debate/runs/{run_id}` - Run 삭제 (Turn 캐스케이드 삭제)
+
+2. **데이터베이스 쿼리**:
+   - `get_turns_by_run_id()` - Run의 모든 Turn 조회 (시간순)
+   - 기존 CRUD 함수 활용 (get_all_runs, get_run_with_agents, delete_run)
+
+3. **스키마 업데이트**:
+   - `TurnResponse` - Turn 모델 필드에 맞게 수정 (agent_id, phase, role, content, targets, metadata_json, created_at)
+   - `RunDetailResponse` - 에이전트 정보 포함한 상세 응답 (AgentResponse 임베딩)
+   - `RunResponse` - Run 모델 필드 업데이트 (result_json, finished_at 추가)
+
+4. **오류 처리**:
+   - 404 Not Found - Run/Turn이 존재하지 않을 때
+   - 적절한 HTTP 상태 코드 (200, 204, 404)
+   - 명확한 에러 메시지
+
+5. **Validation 수정**:
+   - **Critical Fix**: `get_run_with_agents()` 에이전트 딕셔너리에 `created_at`, `updated_at` 필드 추가
+   - AgentResponse 스키마 요구사항 충족
+   - Pydantic 검증 오류 해결
+
+**결과 (Result)**:
+- Phase 1-M1 백엔드 100% 완성
+- 모든 CRUD 작업 지원 (Create, Read, Update, Delete)
+- 리플레이 기능을 위한 Turn 조회 가능
+- 프론트엔드 연동 준비 완료
+
+**관련 파일 (Related Files)**:
+- `/backend/app/services/run_crud.py` - get_turns_by_run_id() 추가, 에이전트 필드 수정
+- `/backend/app/models/schemas.py` - TurnResponse, RunDetailResponse 업데이트
+- `/backend/app/api/endpoints/debate.py` - 4개 Run API 엔드포인트 구현
+
+**Commits**:
+- 92fd661 Phase 1-M1: Run API completion
+- 5930c2e Fix critical validation issue in get_run_with_agents
+
 ---
 
 ## Notes
