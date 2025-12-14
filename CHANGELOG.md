@@ -25,9 +25,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `get_turns_by_run_id()` function in run_crud service
 
 ### Fixed
+- **Critical**: SSE event type mismatch in agent preview - frontend now correctly listens for "chunk" and "done" events matching backend
+- **Critical**: Memory leak in useAgentPreview - added cleanup on unmount to abort streams
 - Missing `created_at` and `updated_at` fields in agent dictionaries
 - Invalid Next.js config (removed experimental.turbo and eslint keys)
 - Tailwind darkMode config (changed from array to string)
+- Hardcoded API URLs - now using NEXT_PUBLIC_API_URL environment variable
 
 ## [0.2.0] - 2025-12-15
 
@@ -293,6 +296,31 @@ Phase 1.8 Frontend Agent Module 구현 - Agent CRUD, Preview SSE 스트리밍, T
 - `/frontend/tailwind.config.ts` - Tailwind 설정 수정
 
 **Commit**: 6a3113a Phase 1-M1.8: Frontend Agent Module complete
+
+### 2025-12-15: Code Validation 및 Critical Fix
+
+**목표 (Goal)**:
+code-validator agent를 통한 Phase 1.8 구현 검증 및 critical issues 수정
+
+**발견된 Critical Issues**:
+1. **SSE Event Type Mismatch**: Frontend가 "token", "phase_end" 이벤트를 기대했으나 Backend는 "chunk", "done" 이벤트를 전송
+2. **Memory Leak**: useAgentPreview hook에서 컴포넌트 unmount 시 cleanup 누락으로 인한 메모리 누수 가능성
+
+**수정 내용 (Fixes)**:
+1. `use-agent-preview.ts` - SSE 이벤트 타입을 backend와 매칭되도록 수정 ("chunk", "done" 사용)
+2. `use-agent-preview.ts` - useEffect cleanup 추가하여 unmount 시 AbortController 정리
+3. `api-client.ts`, `use-agent-preview.ts` - API URL을 환경변수(NEXT_PUBLIC_API_URL)로 변경
+
+**검증 결과 (Validation Result)**:
+- Critical issues 해결로 SSE streaming preview 정상 작동 확인
+- 메모리 누수 방지 로직 추가로 안정성 향상
+- 환경변수 사용으로 배포 환경 유연성 확보
+
+**관련 파일 (Related Files)**:
+- `/frontend/hooks/use-agent-preview.ts` - SSE 이벤트 타입 수정, cleanup 추가
+- `/frontend/lib/api-client.ts` - 환경변수 사용
+
+**Commit**: ae9339e Fix critical issues from code validation
 
 ---
 
