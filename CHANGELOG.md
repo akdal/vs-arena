@@ -29,6 +29,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Text/Flow view toggle in arena page
   - React Flow components: Background, Controls, MiniMap
   - Real-time graph updates from SSE events
+
+### Fixed
+- **Phase 2.1 Critical Issues** (from code-validator agent):
+  - SSE streaming integration: useDebateFlow now manages its own SSE connection
+  - Edge components now use proper EdgeProps type instead of `any`
+  - Dagre graph instantiation moved inside function to prevent shared mutable state
+  - Removed unused phaseOrder array from node-factory.ts
+  - Added phasesRef reset when run changes to prevent stale data
+
+### Added (Continued)
 - **Frontend Debate Setup Module**: Complete debate configuration and streaming UI (Phase 1.9)
   - Debate types: DebateStartRequest, DebateConfig, RubricConfig, Run, RunDetail, DebatePhase, DebateEventType
   - API functions: startDebate, getRuns, getRun
