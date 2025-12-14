@@ -205,25 +205,28 @@ Tables:
 
 ## Features
 
-### Implemented (Phase 0)
-- ✅ Project structure setup
-- ✅ Backend FastAPI foundation
-- ✅ Frontend Next.js foundation
-- ✅ PostgreSQL database schema
-- ✅ Docker Compose setup
-- ✅ Basic API endpoints (stubs)
-- ✅ Ollama integration (status/models)
+### Completed (Phase 0-2)
+- Project structure setup
+- Backend FastAPI foundation with LangGraph orchestration
+- Frontend Next.js with App Router
+- PostgreSQL database schema
+- Docker Compose setup
+- Ollama integration (models, status, streaming)
+- Agent CRUD API (create, read, update, delete, clone, preview)
+- LangGraph 14-node debate workflow (BP Lite format)
+- SSE streaming for real-time debate
+- Frontend Agent Module (management, preview)
+- Frontend Debate Module (setup, streaming arena)
+- React Flow visualization (custom nodes/edges, Dagre layout)
+- Animation & UX (typing effect, node glow, edge flow, auto-scroll)
+- Arena UI (layout, turn indicator, side panel with scores/progress/log)
 
-### In Progress (Phase 1 - M1)
-- 🚧 Agent CRUD implementation
-- 🚧 LangGraph workflow setup
-- 🚧 SSE streaming
-- 🚧 Frontend UI components
+### In Progress (Phase 2 - M2)
+- Judging System Frontend (ScoreCard, VerdictPanel)
 
 ### Planned
-- Phase 2: React Flow visualization + Judging system
-- Phase 3: Replay, rule violation detection, error handling
-- Phase 4: Testing, performance optimization
+- Phase 3: Replay, rule violation detection, character showcase
+- Phase 4: Testing, performance optimization, documentation
 
 ## Documentation
 
