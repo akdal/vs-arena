@@ -53,6 +53,163 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - shadcn/ui components (Button, Card, Input, Label, Textarea)
 - TanStack Query 5.90.12 for state management
 
+---
+
+## Development Log
+
+상세한 구현 기록과 관련 파일 목록입니다.
+
+### 2025-12-15: Phase 0 프로젝트 초기 설정 완료
+
+**목표 (Goal)**:
+VS Arena 프로젝트의 기본 인프라 및 개발 환경 구축
+
+**구현 내용 (Implementation)**:
+1. **프로젝트 구조**: backend, frontend, docker, docs 디렉토리 구조 생성
+2. **Backend 초기화**:
+   - Python 3.12+ 환경
+   - FastAPI 0.124.4, LangGraph 0.6.11, SQLAlchemy 2.0.45
+   - 기본 API 라우터 구조 (app/api, app/core, app/db, app/models, app/services, app/graph)
+   - CORS 미들웨어 설정
+3. **Frontend 초기화**:
+   - Next.js 16.0.10 with App Router
+   - React 19.2.3, TypeScript 5.9.3
+   - Tailwind CSS 4.1.18 with shadcn/ui (new-york style)
+   - React Flow 12.10.0 (@xyflow/react), TanStack Query 5.90.12
+   - 기본 UI 컴포넌트 (Button, Card, Input, Label, Textarea)
+4. **Database**:
+   - PostgreSQL 17 Docker Compose 설정
+   - 초기 스키마 (agents, runs, turns 테이블)
+   - UUID 확장, 인덱스, updated_at 트리거
+
+**결과 (Result)**:
+- 모든 패키지가 2025-12-15 기준 최신 버전으로 설정됨
+- Backend: `uvicorn app.main:app --reload` 로 실행 가능
+- Frontend: `npm run dev` (Turbopack 지원) 로 실행 가능
+- Database: `docker-compose up -d` 로 PostgreSQL 컨테이너 실행 가능
+
+**관련 파일 (Related Files)**:
+- `/backend/pyproject.toml` - Backend 의존성
+- `/backend/app/main.py` - FastAPI 애플리케이션
+- `/frontend/package.json` - Frontend 의존성
+- `/frontend/components.json` - shadcn/ui 설정
+- `/docker-compose.yml` - PostgreSQL 컨테이너 설정
+- `/docker/init.sql` - 데이터베이스 스키마
+- `/README.md` - 프로젝트 문서
+
+### 2025-12-15: Phase 1-M1 LangGraph 기본 플로우 완료
+
+**목표 (Goal)**:
+BP Lite 형식의 토론 오케스트레이션 시스템 구현 - LangGraph 기반 14노드 워크플로우와 SSE 실시간 스트리밍
+
+**구현 내용 (Implementation)**:
+1. **LangGraph 상태 정의**:
+   - `DebateState` TypedDict - 전체 토론 상태 관리
+   - `Turn` TypedDict - 개별 발언 턴 정의
+   - 상태 필드: run_id, topic, positions, agents, config, rubric, turns, scores, winner, verdict
+
+2. **14노드 토론 그래프**:
+   - 6개 Debater 노드: `opening_a`, `opening_b`, `rebuttal_a`, `rebuttal_b`, `summary_a`, `summary_b`
+   - 7개 Judge 노드: `judge_intro`, `score_opening_a`, `score_opening_b`, `score_rebuttal_a`, `score_rebuttal_b`, `score_summary_a`, `score_summary_b`
+   - 1개 Verdict 노드: `judge_verdict`
+   - StateGraph 순차 연결 및 컴파일
+
+3. **SSE 스트리밍 아키텍처**:
+   - `EventSourceResponse` 기반 실시간 스트리밍
+   - 이벤트 타입: `phase_start`, `token`, `phase_end`, `score`, `verdict`, `run_complete`, `error`
+   - Debater 노드: 토큰 단위 스트리밍
+   - Judge 노드: 완료 후 일괄 전송
+
+4. **Ollama 연동 및 오류 처리**:
+   - Exponential backoff 재시도 로직 (최대 3회)
+   - `stream_ollama_with_retry` - 스트리밍 호출
+   - `call_ollama_with_retry` - 동기 호출
+   - JSON 점수 파싱 (3-tier fallback: 전체 JSON -> JSON 블록 -> 기본값)
+
+5. **프롬프트 템플릿**:
+   - Debater 프롬프트: Opening, Rebuttal (상대 발언 컨텍스트), Summary (전체 토론)
+   - Judge 프롬프트: Intro, Scoring (Opening/Rebuttal/Summary), Verdict
+   - Persona 인젝션 지원
+
+6. **데이터베이스 통합**:
+   - Turn 즉시 영속화
+   - Run 상태 업데이트 (pending -> running -> completed/failed)
+   - Run CRUD 서비스 (create_run, get_run_with_agents, update_run_status)
+
+7. **API 엔드포인트**:
+   - `POST /api/debate/start` - 토론 시작 (Run 생성, 에이전트 검증)
+   - `GET /api/debate/stream/{run_id}` - SSE 스트리밍 실행
+
+**결과 (Result)**:
+- BP Lite 형식의 완전한 토론 실행 가능
+- 실시간 토큰 스트리밍으로 프론트엔드 연동 준비 완료
+- 채점 시스템 기본 구조 완성 (가중치 적용, 총점 계산)
+- 오류 발생 시 자동 재시도 및 상태 복구
+
+**관련 파일 (Related Files)**:
+- `/backend/app/graph/state.py` - DebateState, Turn TypedDicts
+- `/backend/app/graph/graph.py` - StateGraph 정의 (14 nodes)
+- `/backend/app/graph/executor.py` - SSE 스트리밍 실행기
+- `/backend/app/graph/nodes/debater.py` - 6개 Debater 노드 함수
+- `/backend/app/graph/nodes/judge.py` - 7개 Judge 노드 함수
+- `/backend/app/graph/nodes/utils.py` - 재시도 로직, JSON 파싱
+- `/backend/app/graph/prompts/debater_prompts.py` - Debater 프롬프트 템플릿
+- `/backend/app/graph/prompts/judge_prompts.py` - Judge 프롬프트 템플릿
+- `/backend/app/services/run_crud.py` - Run CRUD 연산
+- `/backend/app/models/schemas.py` - DebateStartRequest, DebateStartResponse
+- `/backend/app/api/endpoints/debate.py` - POST /start, GET /stream/{run_id}
+- `/backend/app/models/turn.py` - metadata_json 필드 수정 (SQLAlchemy 충돌 해결)
+
+**Commit**: 3c85257 Phase 1-M1: Core backend implementation complete
+
+### 2025-12-15: Phase 1-M1 Run API 완료 - Backend 100% 완성
+
+**목표 (Goal)**:
+Run 관리 API 구현으로 Phase 1-M1 백엔드 완성
+
+**구현 내용 (Implementation)**:
+1. **Run API 엔드포인트 (4개)**:
+   - `GET /api/debate/runs` - Run 목록 조회 (최신순 정렬)
+   - `GET /api/debate/runs/{run_id}` - Run 상세 조회 (에이전트 정보 포함)
+   - `GET /api/debate/runs/{run_id}/turns` - Turn 목록 조회 (리플레이용)
+   - `DELETE /api/debate/runs/{run_id}` - Run 삭제 (Turn 캐스케이드 삭제)
+
+2. **데이터베이스 쿼리**:
+   - `get_turns_by_run_id()` - Run의 모든 Turn 조회 (시간순)
+   - 기존 CRUD 함수 활용 (get_all_runs, get_run_with_agents, delete_run)
+
+3. **스키마 업데이트**:
+   - `TurnResponse` - Turn 모델 필드에 맞게 수정 (agent_id, phase, role, content, targets, metadata_json, created_at)
+   - `RunDetailResponse` - 에이전트 정보 포함한 상세 응답 (AgentResponse 임베딩)
+   - `RunResponse` - Run 모델 필드 업데이트 (result_json, finished_at 추가)
+
+4. **오류 처리**:
+   - 404 Not Found - Run/Turn이 존재하지 않을 때
+   - 적절한 HTTP 상태 코드 (200, 204, 404)
+   - 명확한 에러 메시지
+
+5. **Validation 수정**:
+   - **Critical Fix**: `get_run_with_agents()` 에이전트 딕셔너리에 `created_at`, `updated_at` 필드 추가
+   - AgentResponse 스키마 요구사항 충족
+   - Pydantic 검증 오류 해결
+
+**결과 (Result)**:
+- Phase 1-M1 백엔드 100% 완성
+- 모든 CRUD 작업 지원 (Create, Read, Update, Delete)
+- 리플레이 기능을 위한 Turn 조회 가능
+- 프론트엔드 연동 준비 완료
+
+**관련 파일 (Related Files)**:
+- `/backend/app/services/run_crud.py` - get_turns_by_run_id() 추가, 에이전트 필드 수정
+- `/backend/app/models/schemas.py` - TurnResponse, RunDetailResponse 업데이트
+- `/backend/app/api/endpoints/debate.py` - 4개 Run API 엔드포인트 구현
+
+**Commits**:
+- 92fd661 Phase 1-M1: Run API completion
+- 5930c2e Fix critical validation issue in get_run_with_agents
+
+---
+
 [Unreleased]: https://github.com/your-repo/vs-arena/compare/v0.2.0...HEAD
 [0.2.0]: https://github.com/your-repo/vs-arena/compare/v0.1.0...v0.2.0
 [0.1.0]: https://github.com/your-repo/vs-arena/releases/tag/v0.1.0
