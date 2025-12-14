@@ -138,6 +138,19 @@ export type DebatePhase =
 
 export type DebateEventType = SSEEventType;
 
+// Turn Type (for replay)
+export interface Turn {
+  turn_id: string;
+  run_id: string;
+  agent_id: string;
+  phase: string;
+  role: string;
+  content: string;
+  targets: string[];
+  metadata_json: Record<string, unknown>;
+  created_at: string;
+}
+
 // API Error Type
 export interface APIError {
   detail: string;

@@ -13,6 +13,7 @@ import type {
   DebateStartResponse,
   Run,
   RunDetail,
+  Turn,
   APIError,
 } from "./types";
 
@@ -163,4 +164,20 @@ export async function getRuns(): Promise<Run[]> {
  */
 export async function getRun(runId: string): Promise<RunDetail> {
   return fetchAPI<RunDetail>(`/debate/runs/${runId}`);
+}
+
+/**
+ * Get all turns for a debate run (for replay)
+ */
+export async function getRunTurns(runId: string): Promise<Turn[]> {
+  return fetchAPI<Turn[]>(`/debate/runs/${runId}/turns`);
+}
+
+/**
+ * Delete a debate run
+ */
+export async function deleteRun(runId: string): Promise<void> {
+  return fetchAPI<void>(`/debate/runs/${runId}`, {
+    method: "DELETE",
+  });
 }
