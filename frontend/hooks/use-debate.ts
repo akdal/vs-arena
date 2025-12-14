@@ -4,8 +4,14 @@
  */
 
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import type { DebateStartRequest, Run, RunDetail } from "@/lib/types";
-import { startDebate, getRuns, getRun } from "@/lib/api-client";
+import type { DebateStartRequest, Run, RunDetail, Turn } from "@/lib/types";
+import {
+  startDebate,
+  getRuns,
+  getRun,
+  getRunTurns,
+  deleteRun,
+} from "@/lib/api-client";
 
 // Query Keys
 const debateKeys = {
@@ -45,6 +51,32 @@ export function useStartDebate() {
 
   return useMutation({
     mutationFn: (data: DebateStartRequest) => startDebate(data),
+    onSuccess: () => {
+      // Invalidate runs list to refetch
+      queryClient.invalidateQueries({ queryKey: debateKeys.runsList() });
+    },
+  });
+}
+
+/**
+ * Fetch turns for a debate run (for replay)
+ */
+export function useRunTurns(runId: string | null) {
+  return useQuery({
+    queryKey: [...debateKeys.runDetail(runId ?? ""), "turns"] as const,
+    queryFn: () => getRunTurns(runId!),
+    enabled: !!runId,
+  });
+}
+
+/**
+ * Delete a debate run
+ */
+export function useDeleteRun() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (runId: string) => deleteRun(runId),
     onSuccess: () => {
       // Invalidate runs list to refetch
       queryClient.invalidateQueries({ queryKey: debateKeys.runsList() });
