@@ -2,7 +2,7 @@
 Pydantic schemas for API request/response validation
 """
 from pydantic import BaseModel, Field
-from typing import Optional, Dict, Any, Literal
+from typing import Optional, Dict, Any, Literal, List
 from uuid import UUID
 from datetime import datetime
 
@@ -82,7 +82,7 @@ class RunCreate(BaseModel):
 
 
 class RunResponse(BaseModel):
-    """Schema for run response"""
+    """Schema for run response (list view)"""
     run_id: UUID
     topic: str
     position_a: str
@@ -91,13 +91,31 @@ class RunResponse(BaseModel):
     agent_b_id: UUID
     agent_j_id: Optional[UUID]
     config_json: Dict[str, Any]
+    rubric_json: Dict[str, Any]
+    result_json: Optional[Dict[str, Any]]
     status: str
-    winner: Optional[str]
-    verdict_json: Optional[Dict[str, Any]]
     created_at: datetime
+    finished_at: Optional[datetime]
 
     class Config:
         from_attributes = True
+
+
+class RunDetailResponse(BaseModel):
+    """Schema for run detail response (with agent info)"""
+    run_id: UUID
+    topic: str
+    position_a: str
+    position_b: str
+    agent_a: AgentResponse
+    agent_b: AgentResponse
+    agent_j: AgentResponse
+    config_json: Dict[str, Any]
+    rubric_json: Dict[str, Any]
+    result_json: Optional[Dict[str, Any]]
+    status: str
+    created_at: datetime
+    finished_at: Optional[datetime]
 
 
 # Turn Schemas
@@ -105,10 +123,13 @@ class TurnResponse(BaseModel):
     """Schema for turn response"""
     turn_id: UUID
     run_id: UUID
-    turn_number: int
-    speaker: str
-    content_json: Dict[str, Any]
-    timestamp: datetime
+    agent_id: UUID
+    phase: str
+    role: str
+    content: str
+    targets: List[UUID]
+    metadata_json: Dict[str, Any]
+    created_at: datetime
 
     class Config:
         from_attributes = True

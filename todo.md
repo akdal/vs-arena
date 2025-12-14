@@ -45,7 +45,7 @@
 ## Phase 1: M1 - Core Foundation
 
 ### 1.1 Database Schema
-- [ ] Agents 테이블 생성
+- [x] Agents 테이블 생성
   ```sql
   CREATE TABLE agents (
     agent_id UUID PRIMARY KEY,
@@ -57,32 +57,33 @@
     updated_at TIMESTAMP DEFAULT NOW()
   );
   ```
-- [ ] Runs 테이블 생성
-- [ ] Turns 테이블 생성
-- [ ] 인덱스 생성 (idx_turns_run_id, idx_turns_phase)
+- [x] Runs 테이블 생성
+- [x] Turns 테이블 생성
+- [x] 인덱스 생성 (idx_turns_run_id, idx_turns_phase)
 
 ### 1.2 Ollama Integration
-- [ ] Ollama 로컬 설치 및 모델 다운로드 (llama3, qwen2.5 등)
-- [ ] `GET /api/ollama/models` - 모델 목록 조회
-- [ ] `GET /api/ollama/status` - 서버 상태 확인
-- [ ] Ollama 클라이언트 래퍼 구현
-  - [ ] `call_ollama(model, prompt, params)` - 동기 호출
-  - [ ] `stream_ollama(model, prompt, params)` - 스트리밍 호출
+- [x] Ollama 로컬 설치 및 모델 다운로드 (llama3, qwen2.5 등)
+- [x] `GET /api/ollama/models` - 모델 목록 조회
+- [x] `GET /api/ollama/status` - 서버 상태 확인
+- [x] Ollama 클라이언트 래퍼 구현
+  - [x] `call_ollama(model, prompt, params)` - 동기 호출
+  - [x] `stream_ollama(model, prompt, params)` - 스트리밍 호출
 
 ### 1.3 Agent CRUD API
-- [ ] `GET /api/agents` - 목록 조회
-- [ ] `POST /api/agents` - 생성
-- [ ] `GET /api/agents/{id}` - 상세 조회
-- [ ] `PUT /api/agents/{id}` - 수정
-- [ ] `DELETE /api/agents/{id}` - 삭제
-- [ ] Request/Response DTO 정의
-- [ ] Validation (name 길이, model 존재 여부 등)
+- [x] `GET /api/agents` - 목록 조회
+- [x] `POST /api/agents` - 생성
+- [x] `GET /api/agents/{id}` - 상세 조회
+- [x] `PUT /api/agents/{id}` - 수정
+- [x] `DELETE /api/agents/{id}` - 삭제
+- [x] `POST /api/agents/{id}/clone` - 에이전트 복제
+- [x] Request/Response DTO 정의
+- [x] Validation (name 길이, model 존재 여부 등)
 
 ### 1.4 Agent Preview API
-- [ ] `POST /api/agents/preview` - 1-Turn 테스트
-- [ ] SSE 스트리밍 응답 구현
-- [ ] Opening 프롬프트 템플릿 작성
-- [ ] 저장된 Agent 또는 임시 config 지원
+- [x] `POST /api/agents/preview` - 1-Turn 테스트
+- [x] SSE 스트리밍 응답 구현
+- [x] Opening 프롬프트 템플릿 작성
+- [x] 저장된 Agent 또는 임시 config 지원
 
 ### 1.5 LangGraph Basic Flow
 - [x] DebateState TypedDict 정의
@@ -110,10 +111,10 @@
 
 ### 1.6 Debate API
 - [x] `POST /api/debate/start` - 토론 시작 (Run 생성)
-- [ ] `GET /api/runs` - Run 목록 조회
-- [ ] `GET /api/runs/{id}` - Run 상세 조회
-- [ ] `GET /api/runs/{id}/turns` - Turn 목록 조회
-- [ ] `DELETE /api/runs/{id}` - Run 삭제
+- [x] `GET /api/debate/runs` - Run 목록 조회
+- [x] `GET /api/debate/runs/{id}` - Run 상세 조회 (에이전트 정보 포함)
+- [x] `GET /api/debate/runs/{id}/turns` - Turn 목록 조회 (리플레이용)
+- [x] `DELETE /api/debate/runs/{id}` - Run 삭제
 
 ### 1.7 SSE Streaming
 - [x] `GET /api/debate/stream/{runId}` - 토론 스트리밍
@@ -311,7 +312,7 @@
 | Phase | Status | Progress |
 |-------|--------|----------|
 | Phase 0: Setup | **Completed** | 95% |
-| Phase 1: M1 | **In Progress** | 55% |
+| Phase 1: M1 | **In Progress** | 90% (Backend Complete) |
 | Phase 2: M2 | Not Started | 0% |
 | Phase 3: M3 | Not Started | 0% |
 | Phase 4: Polish | Not Started | 0% |

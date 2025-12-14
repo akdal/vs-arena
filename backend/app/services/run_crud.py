@@ -10,6 +10,7 @@ import uuid
 
 from app.models.run import Run
 from app.models.agent import Agent
+from app.models.turn import Turn
 
 
 async def create_run(
@@ -134,3 +135,13 @@ async def delete_run(db: AsyncSession, run_id: UUID) -> bool:
     await db.delete(run)
     await db.commit()
     return True
+
+
+async def get_turns_by_run_id(db: AsyncSession, run_id: UUID) -> list[Turn]:
+    """Get all turns for a run ordered by creation time"""
+    result = await db.execute(
+        select(Turn)
+        .where(Turn.run_id == run_id)
+        .order_by(Turn.created_at.asc())
+    )
+    return list(result.scalars().all())

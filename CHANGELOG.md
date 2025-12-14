@@ -7,6 +7,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+- `GET /api/debate/runs` - List all debate runs
+- `GET /api/debate/runs/{run_id}` - Get run details with agent information
+- `GET /api/debate/runs/{run_id}/turns` - Get all turns for replay functionality
+- `DELETE /api/debate/runs/{run_id}` - Delete run with cascade to turns
+
+### Changed
+- Updated `TurnResponse` schema to match actual Turn model fields
+- Added `RunDetailResponse` schema with embedded agent information
+- Added `get_turns_by_run_id()` function to run_crud service
+
+### Fixed
+- Updated TODO.md to reflect actual completion status (sections 1.1-1.4 were already implemented)
+
 ## [0.2.0] - 2025-12-15
 
 ### Added

@@ -5,10 +5,18 @@ from fastapi import APIRouter, HTTPException, status, Depends
 from uuid import UUID
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from typing import List
+
 from app.db.database import get_db
-from app.models.schemas import DebateStartRequest, DebateStartResponse
-from app.services.run_crud import create_run, get_run_with_agents, update_run_status
-from app.services import agent_crud
+from app.models.schemas import (
+    DebateStartRequest, DebateStartResponse,
+    RunResponse, RunDetailResponse, TurnResponse
+)
+from app.services.run_crud import (
+    create_run, get_run_with_agents, update_run_status,
+    get_all_runs, get_run_by_id, get_turns_by_run_id
+)
+from app.services import agent_crud, run_crud
 from app.graph.executor import execute_debate_with_streaming
 
 router = APIRouter()
@@ -134,29 +142,77 @@ async def stream_debate(
     return await execute_debate_with_streaming(str(run_id), db)
 
 
-@router.get("/runs")
-async def list_runs():
-    """Get all runs"""
-    # TODO: Implement
-    return {"runs": []}
+@router.get("/runs", response_model=List[RunResponse])
+async def list_runs(db: AsyncSession = Depends(get_db)):
+    """Get all debate runs ordered by creation time (newest first)"""
+    runs = await get_all_runs(db)
+    return runs
 
 
-@router.get("/runs/{run_id}")
-async def get_run(run_id: UUID):
-    """Get run details"""
-    # TODO: Implement
-    raise HTTPException(status_code=501, detail="Not implemented yet")
+@router.get("/runs/{run_id}", response_model=RunDetailResponse)
+async def get_run(run_id: UUID, db: AsyncSession = Depends(get_db)):
+    """
+    Get run details with full agent information.
+
+    Returns complete run data including agent configurations for A, B, and Judge.
+    """
+    run_data = await get_run_with_agents(db, run_id)
+    if not run_data:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"Run {run_id} not found"
+        )
+
+    run = run_data["run"]
+
+    # Build response with agent details
+    return RunDetailResponse(
+        run_id=run.run_id,
+        topic=run.topic,
+        position_a=run.position_a,
+        position_b=run.position_b,
+        agent_a=run_data["agent_a"],
+        agent_b=run_data["agent_b"],
+        agent_j=run_data["agent_j"],
+        config_json=run.config_json,
+        rubric_json=run.rubric_json,
+        result_json=run.result_json,
+        status=run.status,
+        created_at=run.created_at,
+        finished_at=run.finished_at
+    )
 
 
-@router.get("/runs/{run_id}/turns")
-async def get_run_turns(run_id: UUID):
-    """Get all turns for a run (for replay)"""
-    # TODO: Implement
-    raise HTTPException(status_code=501, detail="Not implemented yet")
+@router.get("/runs/{run_id}/turns", response_model=List[TurnResponse])
+async def get_run_turns(run_id: UUID, db: AsyncSession = Depends(get_db)):
+    """
+    Get all turns for a run ordered by creation time.
+
+    Use this endpoint for debate replay functionality - returns all turns
+    in chronological order with full content and metadata.
+    """
+    # First verify run exists
+    run = await get_run_by_id(db, run_id)
+    if not run:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"Run {run_id} not found"
+        )
+
+    turns = await get_turns_by_run_id(db, run_id)
+    return turns
 
 
 @router.delete("/runs/{run_id}", status_code=status.HTTP_204_NO_CONTENT)
-async def delete_run(run_id: UUID):
-    """Delete a run"""
-    # TODO: Implement
-    raise HTTPException(status_code=501, detail="Not implemented yet")
+async def delete_run_endpoint(run_id: UUID, db: AsyncSession = Depends(get_db)):
+    """
+    Delete a debate run and all associated turns.
+
+    This operation cascades to delete all turns belonging to the run.
+    """
+    success = await run_crud.delete_run(db, run_id)
+    if not success:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"Run {run_id} not found"
+        )
