@@ -8,6 +8,27 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- **React Flow Visualization**: Complete graph-based debate visualization (Phase 2.1)
+  - Flow types and TypeScript definitions
+  - Custom node types:
+    - TopicNode: Debate topic display
+    - JudgeIntroNode: Judge introduction
+    - OpeningNode: Opening arguments with position badge
+    - RebuttalNode: Rebuttal arguments
+    - SummaryNode: Summary arguments
+    - ScoreNode: Score display with breakdown
+    - VerdictNode: Final verdict with winner badge
+  - Custom edge types:
+    - SequenceEdge: Phase flow connection (smooth-step)
+    - TargetEdge: Rebuttal target connection (dashed bezier)
+  - BaseDebateNode: Shared component with agent-specific styling (Blue/Red/Purple)
+  - Dagre auto-layout integration with layout.ts utility
+  - Node factory utilities for graph generation
+  - useDebateFlow hook for SSE stream integration
+  - FlowProvider and DebateFlowCanvas components
+  - Text/Flow view toggle in arena page
+  - React Flow components: Background, Controls, MiniMap
+  - Real-time graph updates from SSE events
 - **Frontend Debate Setup Module**: Complete debate configuration and streaming UI (Phase 1.9)
   - Debate types: DebateStartRequest, DebateConfig, RubricConfig, Run, RunDetail, DebatePhase, DebateEventType
   - API functions: startDebate, getRuns, getRun
@@ -339,6 +360,105 @@ code-validator agent를 통한 Phase 1.8 구현 검증 및 critical issues 수�
 - `/frontend/lib/api-client.ts` - 환경변수 사용
 
 **Commit**: ae9339e Fix critical issues from code validation
+
+---
+
+### 2025-12-15: Phase 2.1 React Flow Basic Integration 완료
+
+**목표 (Goal)**:
+React Flow를 사용한 debate 시각화 기본 구현 - 커스텀 노드/엣지, Dagre 레이아웃, SSE 스트리밍 연동
+
+**구현 내용 (Implementation)**:
+1. **Flow 타입 시스템** (flow-types.ts)
+   - DebateFlowNode, DebateFlowEdge 유니온 타입 정의
+   - 7개 노드 데이터 인터페이스 (TopicNodeData, DebateNodeData, ScoreNodeData, VerdictNodeData)
+   - 14개 debate phase를 7개 노드 타입으로 매핑 (nodeTypeMap)
+   - Record<string, unknown> 확장으로 React Flow 타입 호환성 보장
+
+2. **레이아웃 유틸리티** (layout.ts)
+   - @dagrejs/dagre 라이브러리 통합
+   - getLayoutedElements() 함수로 자동 그래프 레이아웃
+   - 설정 가능한 방향(TB/LR), 노드 크기, 간격
+
+3. **노드 팩토리** (node-factory.ts)
+   - createInitialNodes(): 초기 topic 노드 생성
+   - createPhaseNode(): phase별 노드 동적 생성
+   - createSequenceEdges(): 단계별 순차 엣지 생성
+   - createTargetEdges(): 반박 타겟 엣지 생성
+
+4. **베이스 노드 컴포넌트** (base-debate-node.tsx)
+   - Agent별 색상 테마 (Blue: Agent A, Red: Agent B, Purple: Judge)
+   - 스트리밍 애니메이션 (펄스 효과)
+   - 완료 상태 표시
+   - React Flow Handle (source/target) 통합
+
+5. **7개 커스텀 노드**:
+   - TopicNode: 토론 주제 표시
+   - JudgeIntroNode: 심판 소개
+   - OpeningNode: 입론 (포지션 배지 포함)
+   - RebuttalNode: 반론
+   - SummaryNode: 요약
+   - ScoreNode: 점수 표시 (argumentation, rebuttal, delivery, strategy)
+   - VerdictNode: 최종 판정 (승자 배지)
+
+6. **2개 커스텀 엣지**:
+   - SequenceEdge: 순차 연결 (smooth-step, solid)
+   - TargetEdge: 반박 대상 (bezier, dashed, orange)
+
+7. **useDebateFlow 훅** (use-debate-flow.ts)
+   - React Flow 상태 관리 (useNodesState, useEdgesState)
+   - SSE 이벤트 핸들러:
+     * handlePhaseStart: 새 노드 생성 및 레이아웃 재계산
+     * handleToken: 노드 콘텐츠 실시간 업데이트
+     * handlePhaseEnd: 노드 완료 상태 마킹
+     * handleScore: 점수 데이터 업데이트
+     * handleVerdict: 승자 및 분석 업데이트
+   - Type assertion으로 DebateFlowNode[] 타입 안정성 유지
+
+8. **Flow 컴포넌트**:
+   - FlowProvider: ReactFlowProvider 래퍼
+   - DebateFlowCanvas: 메인 시각화 캔버스
+     * Background, Controls, MiniMap 통합
+     * 상태 패널 (Live/Completed, 현재 phase)
+     * fitView 자동 조정
+
+9. **Arena 페이지 통합**:
+   - Text/Flow 뷰 전환 토글 (AlignLeft/LayoutGrid 아이콘)
+   - useDebateStream 훅 연동
+   - 조건부 렌더링
+
+**TypeScript 타입 이슈 해결**:
+- Node/Edge 데이터 인터페이스에 `extends Record<string, unknown>` 추가
+- nodeTypes/edgeTypes 레지스트리에 `any` 타입 사용 (eslint-disable)
+- 개별 노드 컴포넌트 prop 타입을 `{ data: T }` 형식으로 단순화
+- 개별 엣지 컴포넌트 prop 타입을 `any`로 설정
+- setNodes 콜백에 `as DebateFlowNode[]` 타입 assertion 추가
+
+**결과 (Result)**:
+- React Flow 기반 debate 시각화 완전 통합 (22 files)
+- SSE 스트리밍과 실시간 그래프 업데이트 연동
+- Text/Flow 뷰 전환으로 사용자 경험 향상
+- TypeScript 빌드 성공적으로 완료
+- Agent별 색상 테마로 가독성 향상
+
+**관련 파일 (Related Files)**:
+- `/frontend/components/flow/utils/flow-types.ts` - 타입 정의
+- `/frontend/components/flow/utils/layout.ts` - Dagre 레이아웃
+- `/frontend/components/flow/utils/node-factory.ts` - 노드/엣지 생성
+- `/frontend/components/flow/nodes/base-debate-node.tsx` - 베이스 노드
+- `/frontend/components/flow/nodes/{topic,judge-intro,opening,rebuttal,summary,score,verdict}-node.tsx` - 7개 노드
+- `/frontend/components/flow/nodes/index.ts` - 노드 레지스트리
+- `/frontend/components/flow/edges/{sequence,target}-edge.tsx` - 2개 엣지
+- `/frontend/components/flow/edges/index.ts` - 엣지 레지스트리
+- `/frontend/components/flow/flow-provider.tsx` - Provider
+- `/frontend/components/flow/debate-flow-canvas.tsx` - 캔버스
+- `/frontend/components/flow/index.ts` - Barrel export
+- `/frontend/hooks/use-debate-flow.ts` - Flow 상태 훅
+- `/frontend/app/debate/arena/[runId]/page.tsx` - 뷰 토글 통합
+- `/frontend/app/globals.css` - React Flow 스타일
+- `/frontend/package.json`, `/frontend/package-lock.json` - @dagrejs/dagre 추가
+
+**Commit**: 5fc4e16 Phase 2.1: React Flow Basic Integration complete
 
 ---
 
