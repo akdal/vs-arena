@@ -156,17 +156,22 @@
 - [x] Build 및 테스트 완료
 
 ### 1.9 Frontend - Debate Setup (Next.js App Router)
-- [ ] App Router 라우팅 설정
-  - [ ] `app/debate/page.tsx` - Debate 설정
-  - [ ] `app/debate/arena/[runId]/page.tsx` - Arena
-- [ ] 컴포넌트 구현
-  - [ ] DebateSetupForm (Client Component)
-    - [ ] TopicInput
-    - [ ] PositionInputA / PositionInputB
-    - [ ] AgentPicker (A / B / Judge)
-    - [ ] DebateConfigPanel (Rounds, Limits)
-  - [ ] Rubric 설정 UI (가중치 조절)
-- [ ] Start Debate 버튼 및 API 연동
+- [x] App Router 라우팅 설정
+  - [x] `app/debate/page.tsx` - Debate 설정
+  - [x] `app/debate/arena/[runId]/page.tsx` - Arena
+- [x] 컴포넌트 구현
+  - [x] DebateSetupForm (Client Component)
+    - [x] TopicInput (Textarea)
+    - [x] PositionSelector (FOR/AGAINST)
+    - [x] AgentSelector (A / B / Judge)
+    - [x] DebateConfig (Collapsible: Rounds, Max Tokens)
+  - [x] RubricEditor (가중치 슬라이더: argumentation, rebuttal, delivery, strategy)
+  - [x] DebateStreamView (SSE streaming display with phase indicator)
+- [x] Start Debate 버튼 및 API 연동
+  - [x] useStartDebate hook
+  - [x] useDebateStream hook (SSE: phase_start, token, phase_end, score, verdict)
+  - [x] Position validation (opposite positions required)
+  - [x] Navigation to arena on success
 
 ---
 

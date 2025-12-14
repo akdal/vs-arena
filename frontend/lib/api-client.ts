@@ -9,6 +9,10 @@ import type {
   AgentUpdate,
   OllamaModel,
   OllamaStatus,
+  DebateStartRequest,
+  DebateStartResponse,
+  Run,
+  RunDetail,
   APIError,
 } from "./types";
 
@@ -129,4 +133,34 @@ export async function getOllamaModels(): Promise<OllamaModel[]> {
  */
 export async function getOllamaStatus(): Promise<OllamaStatus> {
   return fetchAPI<OllamaStatus>("/ollama/status");
+}
+
+// ============================================================================
+// Debate API
+// ============================================================================
+
+/**
+ * Start a new debate
+ */
+export async function startDebate(
+  data: DebateStartRequest
+): Promise<DebateStartResponse> {
+  return fetchAPI<DebateStartResponse>("/debate/start", {
+    method: "POST",
+    body: JSON.stringify(data),
+  });
+}
+
+/**
+ * Get all debate runs
+ */
+export async function getRuns(): Promise<Run[]> {
+  return fetchAPI<Run[]>("/debate/runs");
+}
+
+/**
+ * Get single debate run by ID
+ */
+export async function getRun(runId: string): Promise<RunDetail> {
+  return fetchAPI<RunDetail>(`/debate/runs/${runId}`);
 }

@@ -8,6 +8,24 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- **Frontend Debate Setup Module**: Complete debate configuration and streaming UI (Phase 1.9)
+  - Debate types: DebateStartRequest, DebateConfig, RubricConfig, Run, RunDetail, DebatePhase, DebateEventType
+  - API functions: startDebate, getRuns, getRun
+  - TanStack Query hooks: useStartDebate, useRuns, useRun
+  - SSE streaming hook: useDebateStream with phase tracking, scores, and verdict
+  - Debate components:
+    - AgentSelector: Agent dropdown with model badge
+    - PositionSelector: FOR/AGAINST selector with color distinction
+    - DebateConfig: Collapsible rounds and max_tokens configuration
+    - RubricEditor: Weight sliders for scoring criteria (argumentation, rebuttal, delivery, strategy)
+    - DebateSetupForm: Main form with validation and error handling
+    - DebateStreamView: Real-time streaming display with phase indicator
+  - App Router pages:
+    - `/debate` - Debate setup form
+    - `/debate/arena/[runId]` - Live streaming arena
+  - shadcn/ui components: accordion
+  - Position validation: Ensures agents take opposite positions
+  - Rubric total validation: Visual indicator for weight sum
 - **Frontend Agent Module**: Complete agent management UI (Phase 1.8)
   - App Router pages: list, new, edit, showcase, loading
   - Components: AgentList, AgentCard, AgentEditor, ModelSelector, PersonaEditor, ParamsEditor, AgentPreviewPanel

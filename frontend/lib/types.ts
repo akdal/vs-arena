@@ -68,6 +68,76 @@ export interface SSEEvent {
   data: unknown;
 }
 
+// Debate Types
+export interface DebateStartRequest {
+  topic: string;
+  position_a: "FOR" | "AGAINST";
+  position_b: "FOR" | "AGAINST";
+  agent_a_id: string;
+  agent_b_id: string;
+  agent_j_id: string;
+  config?: DebateConfig;
+  rubric?: RubricConfig;
+}
+
+export interface DebateConfig {
+  rounds?: number;
+  max_tokens_per_turn?: number;
+}
+
+export interface RubricConfig {
+  argumentation_weight?: number;
+  rebuttal_weight?: number;
+  delivery_weight?: number;
+  strategy_weight?: number;
+}
+
+export interface DebateStartResponse {
+  run_id: string;
+  status: string;
+  stream_url: string;
+}
+
+export interface Run {
+  run_id: string;
+  topic: string;
+  position_a: string;
+  position_b: string;
+  agent_a_id: string;
+  agent_b_id: string;
+  agent_j_id: string | null;
+  config_json: Record<string, unknown>;
+  rubric_json: Record<string, unknown>;
+  result_json: Record<string, unknown> | null;
+  status: string;
+  created_at: string;
+  finished_at: string | null;
+}
+
+export interface RunDetail extends Omit<Run, "agent_a_id" | "agent_b_id" | "agent_j_id"> {
+  agent_a: Agent;
+  agent_b: Agent;
+  agent_j: Agent;
+}
+
+export type DebatePhase =
+  | "judge_intro"
+  | "opening_a"
+  | "opening_b"
+  | "rebuttal_a"
+  | "rebuttal_b"
+  | "summary_a"
+  | "summary_b"
+  | "score_opening_a"
+  | "score_opening_b"
+  | "score_rebuttal_a"
+  | "score_rebuttal_b"
+  | "score_summary_a"
+  | "score_summary_b"
+  | "judge_verdict";
+
+export type DebateEventType = SSEEventType;
+
 // API Error Type
 export interface APIError {
   detail: string;
