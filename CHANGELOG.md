@@ -29,6 +29,27 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Text/Flow view toggle in arena page
   - React Flow components: Background, Controls, MiniMap
   - Real-time graph updates from SSE events
+- **Animation & UX Enhancements**: Real-time visual feedback system (Phase 2.2)
+  - Typing effect component (StreamingText):
+    - Character-by-character text reveal with requestAnimationFrame
+    - Blinking cursor during streaming
+    - Configurable speed (charsPerFrame parameter)
+  - Node highlight animations:
+    - Agent-specific glow effects (blue/red/purple)
+    - Box-shadow pulsing animation during streaming
+    - Enhanced visual feedback with colored rings
+  - Edge flow animation:
+    - Active edge tracking with isActive flag
+    - Flowing yellow dash effect on incoming edges
+    - Auto-clear animation on phase completion
+  - Auto-scroll functionality:
+    - Viewport follows active node with setCenter
+    - Smooth 500ms transition animation
+    - Smart fitView only for initial node
+  - CSS keyframes:
+    - blink: Typing cursor (0.8s infinite)
+    - node-glow-blue/red/purple: Agent glows (1.5s ease-in-out)
+    - edge-flow: Dash offset animation (1s linear)
 
 ### Fixed
 - **Phase 2.1 Critical Issues** (from code-validator agent):
