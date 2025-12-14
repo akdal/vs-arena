@@ -3,7 +3,7 @@
  * Handles real-time streaming for agent preview
  */
 
-import { useState, useCallback, useRef } from "react";
+import { useState, useCallback, useRef, useEffect } from "react";
 import type { PreviewRequest } from "@/lib/types";
 
 interface UseAgentPreviewState {
@@ -32,8 +32,11 @@ export function useAgentPreview() {
     // Create abort controller for cleanup
     abortControllerRef.current = new AbortController();
 
+    const apiUrl =
+      process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000/api";
+
     try {
-      const response = await fetch("http://localhost:8000/api/agents/preview", {
+      const response = await fetch(`${apiUrl}/agents/preview`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -87,8 +90,8 @@ export function useAgentPreview() {
             }
           }
 
-          // Handle token events
-          if (eventType === "token") {
+          // Handle chunk events (streaming tokens)
+          if (eventType === "chunk") {
             try {
               const data = JSON.parse(eventData);
               setState((prev) => ({
@@ -96,12 +99,28 @@ export function useAgentPreview() {
                 content: prev.content + (data.content || ""),
               }));
             } catch (e) {
-              console.error("Failed to parse token data:", e);
+              console.error("Failed to parse chunk data:", e);
             }
           }
-          // Handle phase_end or error events
-          else if (eventType === "phase_end" || eventType === "error") {
+          // Handle done or error events
+          else if (eventType === "done" || eventType === "error") {
             // Stream complete
+            if (eventType === "error") {
+              try {
+                const data = JSON.parse(eventData);
+                setState((prev) => ({
+                  ...prev,
+                  isStreaming: false,
+                  error: data.error || "Unknown error",
+                }));
+              } catch (e) {
+                setState((prev) => ({
+                  ...prev,
+                  isStreaming: false,
+                  error: "Stream error occurred",
+                }));
+              }
+            }
             break;
           }
         }
@@ -141,6 +160,16 @@ export function useAgentPreview() {
       ...prev,
       isStreaming: false,
     }));
+  }, []);
+
+  // Cleanup on unmount
+  useEffect(() => {
+    return () => {
+      if (abortControllerRef.current) {
+        abortControllerRef.current.abort();
+        abortControllerRef.current = null;
+      }
+    };
   }, []);
 
   return {
