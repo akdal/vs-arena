@@ -211,13 +211,14 @@
 - [x] Auto-scroll (활성 노드로 뷰포트 이동) - setCenter with 500ms transition
 
 ### 2.3 Arena UI
-- [ ] ArenaLayout 컴포넌트
-- [ ] TurnIndicator (현재 발언자, 진행 단계)
-- [ ] StreamingTextBlock (실시간 텍스트)
-- [ ] ActionSidePanel
-  - [ ] Judge Score 표시
-  - [ ] 토론 로그
-  - [ ] 진행률 표시
+- [x] ArenaLayout 컴포넌트
+- [x] TurnIndicator (현재 발언자, 진행 단계)
+- [x] ActionSidePanel
+  - [x] ScoreDisplay (Agent A vs B 점수 비교)
+  - [x] DebateLog (단계별 로그와 미리보기)
+  - [x] ProgressIndicator (14단계 진행 상태)
+- [x] ArenaFlowView (통합 Flow 뷰 컴포넌트)
+- [x] Arena 페이지 리팩토링 및 통합
 
 ### 2.4 Judging System - Backend (Phase 1.5에서 구현 완료)
 - [x] 채점 노드 구현
@@ -329,7 +330,7 @@
 |-------|--------|----------|
 | Phase 0: Setup | **Completed** | 95% |
 | Phase 1: M1 | **Completed** | 100% (Backend + Frontend Agent Module) |
-| Phase 2: M2 | **In Progress** | 50% (2.1, 2.2 완료) |
+| Phase 2: M2 | **In Progress** | 75% (2.1, 2.2, 2.3 완료) |
 | Phase 3: M3 | Not Started | 0% |
 | Phase 4: Polish | Not Started | 0% |
 

@@ -50,6 +50,39 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
     - blink: Typing cursor (0.8s infinite)
     - node-glow-blue/red/purple: Agent glows (1.5s ease-in-out)
     - edge-flow: Dash offset animation (1s linear)
+- **Arena UI Components**: Enhanced debate arena with layout and side panel (Phase 2.3)
+  - Arena components directory structure:
+    - constants.ts: PHASE_ORDER, PHASE_LABELS, agentStyles, helper functions
+    - arena-layout.tsx: Main layout wrapper with grid structure
+    - turn-indicator.tsx: Current speaker and 14-phase progress display
+    - arena-flow-view.tsx: Integrated Flow view with arena components
+  - ActionSidePanel with three tabs:
+    - ScoreDisplay: Agent A vs B score comparison with progress bars
+      - Opening/Rebuttal/Summary scores
+      - Total score with leading indicator
+      - Real-time score updates
+    - ProgressIndicator: Vertical stepper for all 14 phases
+      - Completed phases with checkmarks
+      - Current phase with spinner
+      - Pending phases with empty circles
+    - DebateLog: Phase-by-phase log with status and preview
+      - Status icons (completed/in_progress/pending)
+      - First 50 chars preview of content
+      - Scrollable with max-height 400px
+  - TurnIndicator features:
+    - Agent avatars with initials (colored circles)
+    - Segmented horizontal progress bar (14 phases)
+    - Current phase label and count (e.g., "3/14")
+    - Active speaker glow animation
+    - Judge indicator when judge is active
+  - Layout features:
+    - 2-column layout (main content + collapsible side panel)
+    - Collapsible side panel (80px width) with toggle button
+    - LocalStorage persistence for panel state
+    - Integrated with existing Text/Flow view toggle
+  - shadcn/ui additions:
+    - Tabs component for side panel navigation
+  - Arena page refactored to use ArenaFlowView for Flow mode
 
 ### Fixed
 - **Phase 2.1 Critical Issues** (from code-validator agent):

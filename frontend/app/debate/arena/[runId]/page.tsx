@@ -10,12 +10,13 @@ import { useParams } from "next/navigation";
 import Link from "next/link";
 import { useRun } from "@/hooks/use-debate";
 import { DebateStreamView } from "@/components/debate/debate-stream-view";
-import { DebateFlowCanvas, FlowProvider } from "@/components/flow";
+import { FlowProvider } from "@/components/flow";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { ArrowLeft, LayoutGrid, AlignLeft } from "lucide-react";
+import { ArenaFlowView } from "@/components/arena/arena-flow-view";
 
 type ViewMode = "text" | "flow";
 
@@ -85,10 +86,10 @@ export default function DebateArenaPage() {
     );
   }
 
-  return (
-    <div className="max-w-7xl mx-auto py-8">
+  const headerContent = (
+    <div>
       {/* Header */}
-      <div className="mb-8">
+      <div className="mb-4">
         <div className="flex items-center justify-between mb-4">
           <div className="flex items-center gap-4">
             <Link href="/debate">
@@ -127,7 +128,7 @@ export default function DebateArenaPage() {
       </div>
 
       {/* Run Details */}
-      <Card className="mb-6">
+      <Card>
         <CardHeader>
           <CardTitle>Debate Details</CardTitle>
         </CardHeader>
@@ -159,13 +160,22 @@ export default function DebateArenaPage() {
           </div>
         </CardContent>
       </Card>
+    </div>
+  );
 
+  return (
+    <div className="max-w-7xl mx-auto py-8">
       {/* View Content */}
       {viewMode === "text" ? (
-        <DebateStreamView runId={runId} autoStart={true} />
+        <>
+          {headerContent}
+          <div className="mt-6">
+            <DebateStreamView runId={runId} autoStart={true} />
+          </div>
+        </>
       ) : (
         <FlowProvider>
-          <DebateFlowCanvas run={run} autoStart={true} />
+          <ArenaFlowView run={run} autoStart={true} header={headerContent} />
         </FlowProvider>
       )}
     </div>
