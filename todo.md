@@ -199,16 +199,16 @@
 - [x] SSE 스트리밍 연동 (useDebateFlow hook)
 
 ### 2.2 Real-time Graph Update
-- [ ] SSE 이벤트 핸들러
-  - [ ] `phase_start` → 새 노드 생성
-  - [ ] `token` → 노드 콘텐츠 업데이트
-  - [ ] `phase_end` → 노드 완료 상태
-  - [ ] `score` → 점수 표시
-- [ ] 애니메이션 효과
-  - [ ] 타이핑 효과 (스트리밍 텍스트)
-  - [ ] 노드 하이라이트 (현재 발언자)
-  - [ ] 엣지 애니메이션 (반박 연결)
-- [ ] Auto-scroll (활성 노드로 뷰포트 이동)
+- [x] SSE 이벤트 핸들러 (Phase 2.1에서 구현 완료)
+  - [x] `phase_start` → 새 노드 생성
+  - [x] `token` → 노드 콘텐츠 업데이트
+  - [x] `phase_end` → 노드 완료 상태
+  - [x] `score` → 점수 표시
+- [x] 애니메이션 효과
+  - [x] 타이핑 효과 (스트리밍 텍스트) - StreamingText 컴포넌트
+  - [x] 노드 하이라이트 (현재 발언자) - Agent-colored glow animations
+  - [x] 엣지 애니메이션 (반박 연결) - Flowing dash effect
+- [x] Auto-scroll (활성 노드로 뷰포트 이동) - setCenter with 500ms transition
 
 ### 2.3 Arena UI
 - [ ] ArenaLayout 컴포넌트
@@ -329,7 +329,7 @@
 |-------|--------|----------|
 | Phase 0: Setup | **Completed** | 95% |
 | Phase 1: M1 | **Completed** | 100% (Backend + Frontend Agent Module) |
-| Phase 2: M2 | **In Progress** | 20% (2.1 완료) |
+| Phase 2: M2 | **In Progress** | 50% (2.1, 2.2 완료) |
 | Phase 3: M3 | Not Started | 0% |
 | Phase 4: Polish | Not Started | 0% |
 
