@@ -2,25 +2,31 @@
 
 /**
  * Debate Arena Page
- * Real-time debate streaming view
+ * Real-time debate streaming view with text/flow toggle
  */
 
-import { useParams, useRouter } from "next/navigation";
+import { useState } from "react";
+import { useParams } from "next/navigation";
 import Link from "next/link";
 import { useRun } from "@/hooks/use-debate";
+import { useDebateStream } from "@/hooks/use-debate-stream";
 import { DebateStreamView } from "@/components/debate/debate-stream-view";
+import { DebateFlowCanvas, FlowProvider } from "@/components/flow";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
-import { ArrowLeft } from "lucide-react";
+import { ArrowLeft, LayoutGrid, AlignLeft } from "lucide-react";
+
+type ViewMode = "text" | "flow";
 
 export default function DebateArenaPage() {
   const params = useParams();
-  const router = useRouter();
   const runId = params.runId as string;
+  const [viewMode, setViewMode] = useState<ViewMode>("text");
 
   const { data: run, isLoading, error } = useRun(runId);
+  const debateStream = useDebateStream();
 
   if (isLoading) {
     return (
@@ -82,19 +88,41 @@ export default function DebateArenaPage() {
   }
 
   return (
-    <div className="max-w-6xl mx-auto py-8">
+    <div className="max-w-7xl mx-auto py-8">
       {/* Header */}
       <div className="mb-8">
-        <div className="flex items-center gap-4 mb-4">
-          <Link href="/debate">
-            <Button variant="ghost" size="sm">
-              <ArrowLeft className="mr-2 h-4 w-4" />
-              Back to Setup
+        <div className="flex items-center justify-between mb-4">
+          <div className="flex items-center gap-4">
+            <Link href="/debate">
+              <Button variant="ghost" size="sm">
+                <ArrowLeft className="mr-2 h-4 w-4" />
+                Back
+              </Button>
+            </Link>
+            <Badge variant={run.status === "completed" ? "default" : "secondary"}>
+              {run.status}
+            </Badge>
+          </div>
+
+          {/* View Mode Toggle */}
+          <div className="flex items-center gap-2 bg-muted rounded-lg p-1">
+            <Button
+              variant={viewMode === "text" ? "default" : "ghost"}
+              size="sm"
+              onClick={() => setViewMode("text")}
+            >
+              <AlignLeft className="h-4 w-4 mr-2" />
+              Text
             </Button>
-          </Link>
-          <Badge variant={run.status === "completed" ? "default" : "secondary"}>
-            {run.status}
-          </Badge>
+            <Button
+              variant={viewMode === "flow" ? "default" : "ghost"}
+              size="sm"
+              onClick={() => setViewMode("flow")}
+            >
+              <LayoutGrid className="h-4 w-4 mr-2" />
+              Flow
+            </Button>
+          </div>
         </div>
         <h1 className="text-3xl font-bold mb-2">Debate Arena</h1>
         <p className="text-muted-foreground text-lg">{run.topic}</p>
@@ -134,8 +162,18 @@ export default function DebateArenaPage() {
         </CardContent>
       </Card>
 
-      {/* Stream View */}
-      <DebateStreamView runId={runId} autoStart={true} />
+      {/* View Content */}
+      {viewMode === "text" ? (
+        <DebateStreamView runId={runId} autoStart={true} />
+      ) : (
+        <FlowProvider>
+          <DebateFlowCanvas
+            run={run}
+            currentPhase={debateStream.currentPhase}
+            isStreaming={debateStream.isStreaming}
+          />
+        </FlowProvider>
+      )}
     </div>
   );
 }

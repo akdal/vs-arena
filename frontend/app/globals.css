@@ -99,3 +99,12 @@
     text-wrap: balance;
   }
 }
+
+/* React Flow Custom Styles */
+.react-flow__node {
+  font-size: 14px;
+}
+
+.react-flow__edge-path {
+  stroke-width: 2;
+}

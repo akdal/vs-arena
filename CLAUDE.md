@@ -33,8 +33,6 @@ Added/Changed/Fixed:
 - [변경 내용]
 
 🤖 Generated with [Claude Code](https://claude.com/claude-code)
-
-Co-Authored-By: Claude <model> <noreply@anthropic.com>
 ```
 
 **규칙:**
