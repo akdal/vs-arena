@@ -8,6 +8,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- **Frontend Agent Module**: Complete agent management UI (Phase 1.8)
+  - App Router pages: list, new, edit, showcase, loading
+  - Components: AgentList, AgentCard, AgentEditor, ModelSelector, PersonaEditor, ParamsEditor, AgentPreviewPanel
+  - TanStack Query v5 integration with hooks for CRUD operations
+  - SSE streaming preview with fetch + ReadableStream
+  - TypeScript type definitions matching backend schemas
+  - API client with error handling
+  - shadcn/ui components: select, slider, skeleton, badge
 - Run management API endpoints:
   - `GET /api/debate/runs` - List all runs
   - `GET /api/debate/runs/{run_id}` - Get run details with agents
@@ -18,6 +26,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 - Missing `created_at` and `updated_at` fields in agent dictionaries
+- Invalid Next.js config (removed experimental.turbo and eslint keys)
+- Tailwind darkMode config (changed from array to string)
 
 ## [0.2.0] - 2025-12-15
 
@@ -207,6 +217,82 @@ Run 관리 API 구현으로 Phase 1-M1 백엔드 완성
 **Commits**:
 - 92fd661 Phase 1-M1: Run API completion
 - 5930c2e Fix critical validation issue in get_run_with_agents
+
+### 2025-12-15: Phase 1-M1.8 Frontend Agent Module 완료
+
+**목표 (Goal)**:
+Phase 1.8 Frontend Agent Module 구현 - Agent CRUD, Preview SSE 스트리밍, TanStack Query 통합
+
+**구현 내용 (Implementation)**:
+1. **Infrastructure Layer**:
+   - TypeScript 타입 정의 (`lib/types.ts`) - Backend Pydantic 스키마와 매칭
+   - API Client (`lib/api-client.ts`) - 에러 핸들링 포함 fetch 래퍼
+   - TanStack Query Provider (`app/providers.tsx`) - 전역 상태 관리 설정
+
+2. **shadcn/ui 컴포넌트 추가**:
+   - Select, Slider, Skeleton, Badge 설치
+   - Button, Card, Input, Label, Textarea (기존 설치됨)
+
+3. **Custom Hooks**:
+   - `useAgents`, `useAgent`, `useCreateAgent`, `useUpdateAgent`, `useDeleteAgent`, `useCloneAgent` - Agent CRUD
+   - `useOllamaModels`, `useOllamaStatus` - Ollama 서버 연동
+   - `useAgentPreview` - SSE 스트리밍 (fetch + ReadableStream, POST body 지원)
+
+4. **Agent 컴포넌트**:
+   - `ModelSelector` - Ollama 모델 드롭다운 + 상태 배지
+   - `PersonaEditor` - JSON 에디터 (실시간 검증)
+   - `ParamsEditor` - LLM 파라미터 (temperature, max_tokens, top_p)
+   - `AgentPreviewPanel` - SSE 스트리밍 프리뷰 (타이핑 효과)
+   - `AgentEditor` - 통합 생성/수정 폼 (2-column 레이아웃)
+   - `AgentCard` - Agent 카드 (Edit/Clone/Delete 액션)
+   - `AgentList` - Agent 그리드 (loading/empty 상태)
+
+5. **Pages (App Router)**:
+   - `/agent` - Agent 목록 페이지
+   - `/agent/new` - Agent 생성 페이지
+   - `/agent/[agentId]/edit` - Agent 편집 페이지
+   - `/agent/showcase` - Character Showcase (검색/필터)
+   - `/agent/loading.tsx` - Loading skeleton
+
+6. **Build 설정 수정**:
+   - `next.config.ts` - experimental.turbo 및 eslint 제거 (Next.js 16 호환)
+   - `tailwind.config.ts` - darkMode 배열 → 문자열 변경
+
+**결과 (Result)**:
+- Phase 1-M1 Frontend 완성 (100%)
+- Agent CRUD 전체 플로우 작동 (생성, 조회, 수정, 삭제, 복제)
+- SSE 스트리밍 프리뷰 작동 (실시간 토큰 표시)
+- Build 성공, Dev server 테스트 완료
+- TanStack Query 캐시 관리로 최적화된 데이터 페칭
+
+**관련 파일 (Related Files)**:
+- `/frontend/lib/types.ts` - TypeScript 타입 정의
+- `/frontend/lib/api-client.ts` - API fetch 래퍼
+- `/frontend/app/providers.tsx` - TanStack Query Provider
+- `/frontend/app/layout.tsx` - Providers 래핑 추가
+- `/frontend/hooks/use-agents.ts` - Agent CRUD hooks
+- `/frontend/hooks/use-ollama-models.ts` - Ollama hooks
+- `/frontend/hooks/use-agent-preview.ts` - SSE streaming hook
+- `/frontend/components/agent/model-selector.tsx` - Model dropdown
+- `/frontend/components/agent/persona-editor.tsx` - JSON editor
+- `/frontend/components/agent/params-editor.tsx` - LLM parameters
+- `/frontend/components/agent/agent-preview-panel.tsx` - SSE preview
+- `/frontend/components/agent/agent-editor.tsx` - Main form
+- `/frontend/components/agent/agent-card.tsx` - Agent card
+- `/frontend/components/agent/agent-list.tsx` - Agent grid
+- `/frontend/app/agent/page.tsx` - Agent list page
+- `/frontend/app/agent/new/page.tsx` - Create agent page
+- `/frontend/app/agent/[agentId]/edit/page.tsx` - Edit agent page
+- `/frontend/app/agent/showcase/page.tsx` - Showcase page
+- `/frontend/app/agent/loading.tsx` - Loading skeleton
+- `/frontend/components/ui/select.tsx` - shadcn Select
+- `/frontend/components/ui/slider.tsx` - shadcn Slider
+- `/frontend/components/ui/skeleton.tsx` - shadcn Skeleton
+- `/frontend/components/ui/badge.tsx` - shadcn Badge
+- `/frontend/next.config.ts` - Next.js 설정 수정
+- `/frontend/tailwind.config.ts` - Tailwind 설정 수정
+
+**Commit**: (to be added)
 
 ---
 

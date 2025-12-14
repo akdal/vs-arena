@@ -129,23 +129,31 @@
 - [ ] 연결 관리 (keep-alive, reconnect)
 
 ### 1.8 Frontend - Agent Module (Next.js App Router)
-- [ ] App Router 라우팅 설정
-  - [ ] `app/agent/page.tsx` - Agent 목록
-  - [ ] `app/agent/new/page.tsx` - Agent 생성
-  - [ ] `app/agent/[agentId]/edit/page.tsx` - Agent 편집
-  - [ ] `app/agent/showcase/page.tsx` - Character Showcase
-- [ ] 컴포넌트 구현
-  - [ ] AgentList (Server Component)
-  - [ ] AgentCard (Client Component)
-  - [ ] AgentEditor (Client Component)
-    - [ ] ModelSelector (Ollama 모델 목록)
-    - [ ] PersonaEditor (JSON 에디터)
-    - [ ] ParamsEditor (슬라이더/입력)
-  - [ ] AgentPreviewPanel (Client Component)
-    - [ ] Topic/Position 입력
-    - [ ] SSE 스트리밍 텍스트 표시
-- [ ] API 연동 (TanStack Query v5)
-- [ ] Tailwind CSS 스타일링
+- [x] App Router 라우팅 설정
+  - [x] `app/agent/page.tsx` - Agent 목록
+  - [x] `app/agent/new/page.tsx` - Agent 생성
+  - [x] `app/agent/[agentId]/edit/page.tsx` - Agent 편집
+  - [x] `app/agent/showcase/page.tsx` - Character Showcase
+  - [x] `app/agent/loading.tsx` - Loading skeleton
+- [x] 컴포넌트 구현
+  - [x] AgentList (Client Component)
+  - [x] AgentCard (Client Component)
+  - [x] AgentEditor (Client Component)
+    - [x] ModelSelector (Ollama 모델 목록)
+    - [x] PersonaEditor (JSON 에디터)
+    - [x] ParamsEditor (슬라이더/입력)
+  - [x] AgentPreviewPanel (Client Component)
+    - [x] Topic/Position 입력
+    - [x] SSE 스트리밍 텍스트 표시
+- [x] API 연동 (TanStack Query v5)
+  - [x] TanStack Query Provider 설정
+  - [x] Agent CRUD hooks (useAgents, useCreateAgent, useUpdateAgent, useDeleteAgent, useCloneAgent)
+  - [x] Ollama hooks (useOllamaModels, useOllamaStatus)
+  - [x] SSE streaming hook (useAgentPreview)
+- [x] Tailwind CSS 스타일링
+- [x] TypeScript 타입 정의 (lib/types.ts)
+- [x] API Client 구현 (lib/api-client.ts)
+- [x] Build 및 테스트 완료
 
 ### 1.9 Frontend - Debate Setup (Next.js App Router)
 - [ ] App Router 라우팅 설정
@@ -312,7 +320,7 @@
 | Phase | Status | Progress |
 |-------|--------|----------|
 | Phase 0: Setup | **Completed** | 95% |
-| Phase 1: M1 | **In Progress** | 90% (Backend Complete) |
+| Phase 1: M1 | **Completed** | 100% (Backend + Frontend Agent Module) |
 | Phase 2: M2 | Not Started | 0% |
 | Phase 3: M3 | Not Started | 0% |
 | Phase 4: Polish | Not Started | 0% |
