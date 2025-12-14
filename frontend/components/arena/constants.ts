@@ -1,6 +1,15 @@
 import type { DebatePhase } from "@/lib/types";
 
 /**
+ * Default node dimensions for React Flow layout
+ * Must match layout.ts values for consistent auto-scroll behavior
+ */
+export const NODE_DIMENSIONS = {
+  width: 320,
+  height: 150,
+} as const;
+
+/**
  * Ordered list of all 14 debate phases
  */
 export const PHASE_ORDER: DebatePhase[] = [

@@ -12,7 +12,7 @@ import { ProgressIndicator } from "./progress-indicator";
 import { DebateLog } from "./debate-log";
 import { getCompletedPhases } from "../constants";
 
-interface ActionSidePanelProps {
+export interface ActionSidePanelProps {
   run: RunDetail;
   nodes: DebateFlowNode[];
   currentPhase: DebatePhase | null;

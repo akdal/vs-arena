@@ -3,9 +3,12 @@
 /**
  * Arena Flow View
  * Integrates React Flow visualization with Turn Indicator and Action Side Panel
+ *
+ * IMPORTANT: This component must be wrapped in FlowProvider (ReactFlowProvider)
+ * to use useReactFlow hooks. The parent component is responsible for providing this context.
  */
 
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import {
   ReactFlow,
   Background,
@@ -24,13 +27,20 @@ import { Badge } from "@/components/ui/badge";
 import { TurnIndicator } from "./turn-indicator";
 import { ActionSidePanel } from "./action-side-panel";
 import { ArenaLayout } from "./arena-layout";
+import { NODE_DIMENSIONS } from "./constants";
 
-interface ArenaFlowViewProps {
+export interface ArenaFlowViewProps {
   run: RunDetail;
   autoStart?: boolean;
   header: React.ReactNode;
 }
 
+const STORAGE_KEY = "arena-panel-open";
+
+/**
+ * FlowContent component that uses React Flow hooks
+ * Must be rendered within FlowProvider context
+ */
 function FlowContent({
   run,
   autoStart,
@@ -40,20 +50,29 @@ function FlowContent({
   const prevPhaseRef = useRef<string | null>(null);
   const [isPanelOpen, setIsPanelOpen] = useState(true);
 
-  // Load panel state from localStorage
+  // Load panel state from localStorage with error handling
   useEffect(() => {
-    const savedState = localStorage.getItem("arena-panel-open");
-    if (savedState !== null) {
-      setIsPanelOpen(savedState === "true");
+    try {
+      const savedState = localStorage.getItem(STORAGE_KEY);
+      if (savedState !== null) {
+        setIsPanelOpen(savedState === "true");
+      }
+    } catch {
+      // localStorage unavailable (private browsing, quota exceeded, etc.)
+      // Use default state (panel open)
     }
   }, []);
 
-  // Save panel state to localStorage
-  const handlePanelToggle = () => {
+  // Save panel state to localStorage with error handling
+  const handlePanelToggle = useCallback(() => {
     const newState = !isPanelOpen;
     setIsPanelOpen(newState);
-    localStorage.setItem("arena-panel-open", String(newState));
-  };
+    try {
+      localStorage.setItem(STORAGE_KEY, String(newState));
+    } catch {
+      // localStorage unavailable, silently ignore
+    }
+  }, [isPanelOpen]);
 
   const {
     nodes,
@@ -93,10 +112,8 @@ function FlowContent({
       setTimeout(() => {
         const node = getNode(currentPhase);
         if (node) {
-          const nodeWidth = 320;
-          const nodeHeight = 150;
-          const x = node.position.x + nodeWidth / 2;
-          const y = node.position.y + nodeHeight / 2;
+          const x = node.position.x + NODE_DIMENSIONS.width / 2;
+          const y = node.position.y + NODE_DIMENSIONS.height / 2;
           setCenter(x, y, { duration: 500, zoom: 1 });
         }
       }, 100);
@@ -122,7 +139,7 @@ function FlowContent({
         />
       }
       mainContent={
-        <div className="h-[600px] w-full rounded-lg border bg-slate-50 dark:bg-slate-900">
+        <div className="min-h-[500px] h-[calc(100vh-400px)] max-h-[800px] w-full rounded-lg border bg-slate-50 dark:bg-slate-900">
           <ReactFlow
             nodes={nodes}
             edges={edges}

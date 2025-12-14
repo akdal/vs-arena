@@ -1,11 +1,11 @@
 "use client";
 
-import { memo } from "react";
+import { memo, useMemo } from "react";
 import type { DebateFlowNode } from "@/components/flow/utils/flow-types";
 import { cn } from "@/lib/utils";
 import { agentStyles } from "../constants";
 
-interface ScoreDisplayProps {
+export interface ScoreDisplayProps {
   nodes: DebateFlowNode[];
   agentA: { name: string };
   agentB: { name: string };
@@ -18,101 +18,103 @@ interface AgentScores {
   total: number;
 }
 
+interface ScoreBarProps {
+  label: string;
+  scoreA?: number;
+  scoreB?: number;
+}
+
+/**
+ * Extract scores from score nodes for a given agent
+ */
+function getAgentScores(nodes: DebateFlowNode[], agent: "a" | "b"): AgentScores {
+  const scores: AgentScores = { total: 0 };
+
+  nodes.forEach((node) => {
+    if (node.type === "score" && node.data.scores) {
+      const phase = node.data.phase;
+      const total = node.data.scores.total;
+
+      if (total !== undefined) {
+        if (phase === `score_opening_${agent}`) {
+          scores.opening = total;
+          scores.total += total;
+        } else if (phase === `score_rebuttal_${agent}`) {
+          scores.rebuttal = total;
+          scores.total += total;
+        } else if (phase === `score_summary_${agent}`) {
+          scores.summary = total;
+          scores.total += total;
+        }
+      }
+    }
+  });
+
+  return scores;
+}
+
+/**
+ * Score comparison bar for a single phase
+ */
+const ScoreBar = memo(function ScoreBar({ label, scoreA, scoreB }: ScoreBarProps) {
+  const maxScore = Math.max(scoreA || 0, scoreB || 0);
+  const widthA = maxScore > 0 ? ((scoreA || 0) / maxScore) * 100 : 0;
+  const widthB = maxScore > 0 ? ((scoreB || 0) / maxScore) * 100 : 0;
+
+  return (
+    <div className="space-y-1">
+      <div className="text-xs font-medium text-muted-foreground">{label}</div>
+      <div className="grid grid-cols-[1fr_auto_1fr] gap-2 items-center">
+        {/* Agent A Score */}
+        <div className="flex items-center gap-2">
+          <div className="flex-1 h-2 bg-muted rounded-full overflow-hidden">
+            <div
+              className={cn(
+                "h-full transition-all duration-500",
+                agentStyles.a.accent
+              )}
+              style={{ width: `${widthA}%` }}
+            />
+          </div>
+          <span className="text-xs font-semibold min-w-[2rem] text-right">
+            {scoreA !== undefined ? scoreA.toFixed(1) : "-"}
+          </span>
+        </div>
+
+        {/* VS Divider */}
+        <span className="text-xs text-muted-foreground">vs</span>
+
+        {/* Agent B Score */}
+        <div className="flex items-center gap-2">
+          <span className="text-xs font-semibold min-w-[2rem] text-left">
+            {scoreB !== undefined ? scoreB.toFixed(1) : "-"}
+          </span>
+          <div className="flex-1 h-2 bg-muted rounded-full overflow-hidden">
+            <div
+              className={cn(
+                "h-full transition-all duration-500",
+                agentStyles.b.accent
+              )}
+              style={{ width: `${widthB}%` }}
+            />
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+});
+
 export const ScoreDisplay = memo(function ScoreDisplay({
   nodes,
   agentA,
   agentB,
 }: ScoreDisplayProps) {
-  // Extract scores from score nodes
-  const getAgentScores = (agent: "a" | "b"): AgentScores => {
-    const scores: AgentScores = { total: 0 };
+  // Memoize score calculations
+  const scoresA = useMemo(() => getAgentScores(nodes, "a"), [nodes]);
+  const scoresB = useMemo(() => getAgentScores(nodes, "b"), [nodes]);
 
-    nodes.forEach((node) => {
-      if (node.type === "score" && node.data.scores) {
-        const phase = node.data.phase;
-        const total = node.data.scores.total;
-
-        if (total !== undefined) {
-          if (phase === `score_opening_${agent}`) {
-            scores.opening = total;
-            scores.total += total;
-          } else if (phase === `score_rebuttal_${agent}`) {
-            scores.rebuttal = total;
-            scores.total += total;
-          } else if (phase === `score_summary_${agent}`) {
-            scores.summary = total;
-            scores.total += total;
-          }
-        }
-      }
-    });
-
-    return scores;
-  };
-
-  const scoresA = getAgentScores("a");
-  const scoresB = getAgentScores("b");
-
-  // Determine winner for visual indication
-  const maxTotal = Math.max(scoresA.total, scoresB.total);
-  const isATied = scoresA.total === scoresB.total && scoresA.total > 0;
-  const isBTied = isATied;
-
-  const ScoreBar = ({
-    label,
-    scoreA,
-    scoreB,
-  }: {
-    label: string;
-    scoreA?: number;
-    scoreB?: number;
-  }) => {
-    const maxScore = Math.max(scoreA || 0, scoreB || 0);
-    const widthA = maxScore > 0 ? ((scoreA || 0) / maxScore) * 100 : 0;
-    const widthB = maxScore > 0 ? ((scoreB || 0) / maxScore) * 100 : 0;
-
-    return (
-      <div className="space-y-1">
-        <div className="text-xs font-medium text-muted-foreground">{label}</div>
-        <div className="grid grid-cols-[1fr_auto_1fr] gap-2 items-center">
-          {/* Agent A Score */}
-          <div className="flex items-center gap-2">
-            <div className="flex-1 h-2 bg-muted rounded-full overflow-hidden">
-              <div
-                className={cn(
-                  "h-full transition-all duration-500",
-                  agentStyles.a.accent
-                )}
-                style={{ width: `${widthA}%` }}
-              />
-            </div>
-            <span className="text-xs font-semibold min-w-[2rem] text-right">
-              {scoreA !== undefined ? scoreA.toFixed(1) : "-"}
-            </span>
-          </div>
-
-          {/* VS Divider */}
-          <span className="text-xs text-muted-foreground">vs</span>
-
-          {/* Agent B Score */}
-          <div className="flex items-center gap-2">
-            <span className="text-xs font-semibold min-w-[2rem] text-left">
-              {scoreB !== undefined ? scoreB.toFixed(1) : "-"}
-            </span>
-            <div className="flex-1 h-2 bg-muted rounded-full overflow-hidden">
-              <div
-                className={cn(
-                  "h-full transition-all duration-500",
-                  agentStyles.b.accent
-                )}
-                style={{ width: `${widthB}%` }}
-              />
-            </div>
-          </div>
-        </div>
-      </div>
-    );
-  };
+  // Determine tie state
+  const isTied = scoresA.total === scoresB.total && scoresA.total > 0;
 
   return (
     <div className="space-y-4">
@@ -171,7 +173,7 @@ export const ScoreDisplay = memo(function ScoreDisplay({
                 Leading
               </div>
             )}
-            {isATied && (
+            {isTied && (
               <div className="text-xs font-medium mt-1 text-yellow-600">Tied</div>
             )}
           </div>
@@ -192,7 +194,7 @@ export const ScoreDisplay = memo(function ScoreDisplay({
                 Leading
               </div>
             )}
-            {isBTied && (
+            {isTied && (
               <div className="text-xs font-medium mt-1 text-yellow-600">Tied</div>
             )}
           </div>
