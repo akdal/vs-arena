@@ -6,24 +6,6 @@ import type { DebatePhase, RunDetail } from "@/lib/types";
 import type { DebateFlowNode, DebateFlowEdge } from "./flow-types";
 import { nodeTypeMap } from "./flow-types";
 
-// Phase execution order for edge creation
-const phaseOrder: DebatePhase[] = [
-  "judge_intro",
-  "opening_a",
-  "opening_b",
-  "score_opening_a",
-  "score_opening_b",
-  "rebuttal_a",
-  "rebuttal_b",
-  "score_rebuttal_a",
-  "score_rebuttal_b",
-  "summary_a",
-  "summary_b",
-  "score_summary_a",
-  "score_summary_b",
-  "judge_verdict",
-];
-
 /**
  * Create initial topic node
  */

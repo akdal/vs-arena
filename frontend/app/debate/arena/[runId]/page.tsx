@@ -9,7 +9,6 @@ import { useState } from "react";
 import { useParams } from "next/navigation";
 import Link from "next/link";
 import { useRun } from "@/hooks/use-debate";
-import { useDebateStream } from "@/hooks/use-debate-stream";
 import { DebateStreamView } from "@/components/debate/debate-stream-view";
 import { DebateFlowCanvas, FlowProvider } from "@/components/flow";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -26,7 +25,6 @@ export default function DebateArenaPage() {
   const [viewMode, setViewMode] = useState<ViewMode>("text");
 
   const { data: run, isLoading, error } = useRun(runId);
-  const debateStream = useDebateStream();
 
   if (isLoading) {
     return (
@@ -167,11 +165,7 @@ export default function DebateArenaPage() {
         <DebateStreamView runId={runId} autoStart={true} />
       ) : (
         <FlowProvider>
-          <DebateFlowCanvas
-            run={run}
-            currentPhase={debateStream.currentPhase}
-            isStreaming={debateStream.isStreaming}
-          />
+          <DebateFlowCanvas run={run} autoStart={true} />
         </FlowProvider>
       )}
     </div>

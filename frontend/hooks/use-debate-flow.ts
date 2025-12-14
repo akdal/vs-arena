@@ -2,7 +2,7 @@
 
 /**
  * Debate Flow Hook
- * Manages React Flow state for debate visualization
+ * Manages React Flow state for debate visualization with SSE streaming
  */
 
 import { useState, useCallback, useEffect, useRef } from "react";
@@ -28,12 +28,18 @@ export function useDebateFlow({ run, onLayoutChange }: UseDebateFlowOptions) {
   const [nodes, setNodes, onNodesChange] = useNodesState<DebateFlowNode>([]);
   const [edges, setEdges, onEdgesChange] = useEdgesState<DebateFlowEdge>([]);
   const [currentPhase, setCurrentPhase] = useState<DebatePhase | null>(null);
+  const [isStreaming, setIsStreaming] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   const phasesRef = useRef<DebatePhase[]>([]);
+  const abortControllerRef = useRef<AbortController | null>(null);
 
   // Initialize with topic node
   useEffect(() => {
     const initialNodes = createInitialNodes(run);
     setNodes(initialNodes);
+    phasesRef.current = []; // Reset phases when run changes
+    setCurrentPhase(null);
+    setError(null);
   }, [run, setNodes]);
 
   // Handle phase start - add new node
@@ -135,16 +141,167 @@ export function useDebateFlow({ run, onLayoutChange }: UseDebateFlowOptions) {
     [setNodes]
   );
 
+  // Start SSE streaming
+  const startStream = useCallback(
+    async (runId: string) => {
+      setIsStreaming(true);
+      setError(null);
+
+      // Create abort controller for cleanup
+      abortControllerRef.current = new AbortController();
+
+      const apiUrl =
+        process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000/api";
+
+      try {
+        const response = await fetch(`${apiUrl}/debate/stream/${runId}`, {
+          method: "GET",
+          headers: {
+            Accept: "text/event-stream",
+          },
+          signal: abortControllerRef.current.signal,
+        });
+
+        if (!response.ok) {
+          const error = await response.json().catch(() => ({
+            detail: `HTTP ${response.status}: ${response.statusText}`,
+          }));
+          throw new Error(error.detail);
+        }
+
+        if (!response.body) {
+          throw new Error("No response body");
+        }
+
+        const reader = response.body.getReader();
+        const decoder = new TextDecoder();
+        let buffer = "";
+
+        while (true) {
+          const { done, value } = await reader.read();
+
+          if (done) {
+            break;
+          }
+
+          // Decode chunk and add to buffer
+          buffer += decoder.decode(value, { stream: true });
+
+          // Process complete SSE messages (separated by double newlines)
+          const messages = buffer.split("\n\n");
+          buffer = messages.pop() || ""; // Keep incomplete message in buffer
+
+          for (const message of messages) {
+            if (!message.trim()) continue;
+
+            // Parse SSE format: "event: <type>\ndata: <json>"
+            const lines = message.split("\n");
+            let eventType = "";
+            let eventData = "";
+
+            for (const line of lines) {
+              if (line.startsWith("event: ")) {
+                eventType = line.substring(7).trim();
+              } else if (line.startsWith("data: ")) {
+                eventData = line.substring(6).trim();
+              }
+            }
+
+            // Handle different event types
+            if (eventType === "phase_start") {
+              try {
+                const data = JSON.parse(eventData);
+                handlePhaseStart(data.phase as DebatePhase);
+              } catch (e) {
+                console.error("Failed to parse phase_start data:", e);
+              }
+            } else if (eventType === "token") {
+              try {
+                const data = JSON.parse(eventData);
+                handleToken(data.content || "");
+              } catch (e) {
+                console.error("Failed to parse token data:", e);
+              }
+            } else if (eventType === "phase_end") {
+              try {
+                const data = JSON.parse(eventData);
+                handlePhaseEnd(data.phase as DebatePhase);
+              } catch (e) {
+                console.error("Failed to parse phase_end data:", e);
+              }
+            } else if (eventType === "score") {
+              try {
+                const data = JSON.parse(eventData);
+                handleScore(data);
+              } catch (e) {
+                console.error("Failed to parse score data:", e);
+              }
+            } else if (eventType === "verdict") {
+              try {
+                const data = JSON.parse(eventData);
+                handleVerdict(data);
+              } catch (e) {
+                console.error("Failed to parse verdict data:", e);
+              }
+            } else if (eventType === "run_complete") {
+              setIsStreaming(false);
+              break;
+            } else if (eventType === "error") {
+              try {
+                const data = JSON.parse(eventData);
+                setError(data.error || "Unknown error");
+              } catch (e) {
+                setError("Stream error occurred");
+              }
+              setIsStreaming(false);
+              break;
+            }
+          }
+        }
+
+        // Stream finished successfully
+        setIsStreaming(false);
+      } catch (error) {
+        if (error instanceof Error) {
+          // Ignore abort errors
+          if (error.name !== "AbortError") {
+            setError(error.message);
+          }
+          setIsStreaming(false);
+        }
+      }
+    },
+    [handlePhaseStart, handleToken, handlePhaseEnd, handleScore, handleVerdict]
+  );
+
+  // Stop streaming
+  const stopStream = useCallback(() => {
+    if (abortControllerRef.current) {
+      abortControllerRef.current.abort();
+      abortControllerRef.current = null;
+    }
+    setIsStreaming(false);
+  }, []);
+
+  // Cleanup on unmount
+  useEffect(() => {
+    return () => {
+      if (abortControllerRef.current) {
+        abortControllerRef.current.abort();
+        abortControllerRef.current = null;
+      }
+    };
+  }, []);
+
   return {
     nodes,
     edges,
     currentPhase,
+    isStreaming,
+    error,
     onNodesChange,
     onEdgesChange,
-    handlePhaseStart,
-    handleToken,
-    handlePhaseEnd,
-    handleScore,
-    handleVerdict,
+    startStream,
+    stopStream,
   };
 }

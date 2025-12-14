@@ -178,22 +178,25 @@
 ## Phase 2: M2 - Visualization & Judging
 
 ### 2.1 React Flow Integration
-- [ ] DebateFlowCanvas 컴포넌트 (React Flow 래퍼)
-- [ ] Custom Node 타입 정의
-  - [ ] TopicNode
-  - [ ] JudgeIntroNode
-  - [ ] OpeningNode (A/B 구분)
-  - [ ] RebuttalNode (A/B 구분)
-  - [ ] SummaryNode (A/B 구분)
-  - [ ] VerdictNode
-- [ ] Custom Edge 타입 정의
-  - [ ] SequenceEdge (순서 연결)
-  - [ ] TargetEdge (반박 대상 연결)
-- [ ] Node 스타일링
-  - [ ] Agent A 색상 테마
-  - [ ] Agent B 색상 테마
-  - [ ] Judge 색상 테마
-- [ ] Auto-layout 구현 (dagre 또는 elk)
+- [x] DebateFlowCanvas 컴포넌트 (React Flow 래퍼)
+- [x] Custom Node 타입 정의
+  - [x] TopicNode
+  - [x] JudgeIntroNode
+  - [x] OpeningNode (A/B 구분)
+  - [x] RebuttalNode (A/B 구분)
+  - [x] SummaryNode (A/B 구분)
+  - [x] VerdictNode
+  - [x] ScoreNode (추가)
+- [x] Custom Edge 타입 정의
+  - [x] SequenceEdge (순서 연결)
+  - [x] TargetEdge (반박 대상 연결)
+- [x] Node 스타일링
+  - [x] Agent A 색상 테마 (Blue)
+  - [x] Agent B 색상 테마 (Red)
+  - [x] Judge 색상 테마 (Purple)
+- [x] Auto-layout 구현 (dagre)
+- [x] Text/Flow 뷰 전환 토글
+- [x] SSE 스트리밍 연동 (useDebateFlow hook)
 
 ### 2.2 Real-time Graph Update
 - [ ] SSE 이벤트 핸들러
@@ -326,7 +329,7 @@
 |-------|--------|----------|
 | Phase 0: Setup | **Completed** | 95% |
 | Phase 1: M1 | **Completed** | 100% (Backend + Frontend Agent Module) |
-| Phase 2: M2 | Not Started | 0% |
+| Phase 2: M2 | **In Progress** | 20% (2.1 완료) |
 | Phase 3: M3 | Not Started | 0% |
 | Phase 4: Polish | Not Started | 0% |
 

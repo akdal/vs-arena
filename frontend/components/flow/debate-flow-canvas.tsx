@@ -24,30 +24,38 @@ import { Badge } from "@/components/ui/badge";
 
 interface DebateFlowCanvasProps {
   run: RunDetail;
-  currentPhase: DebatePhase | null;
-  isStreaming: boolean;
-  onPhaseStart?: (phase: DebatePhase) => void;
-  onToken?: (content: string) => void;
-  onPhaseEnd?: (phase: DebatePhase) => void;
-  onScore?: (data: Record<string, unknown>) => void;
-  onVerdict?: (data: Record<string, unknown>) => void;
+  autoStart?: boolean;
 }
 
 export function DebateFlowCanvas({
   run,
-  currentPhase: externalCurrentPhase,
-  isStreaming,
+  autoStart = false,
 }: DebateFlowCanvasProps) {
   const { fitView } = useReactFlow();
 
-  const { nodes, edges, currentPhase, onNodesChange, onEdgesChange } =
-    useDebateFlow({
-      run,
-      onLayoutChange: () => {
-        // Fit view after layout change
-        setTimeout(() => fitView({ padding: 0.2, duration: 300 }), 50);
-      },
-    });
+  const {
+    nodes,
+    edges,
+    currentPhase,
+    isStreaming,
+    error,
+    onNodesChange,
+    onEdgesChange,
+    startStream,
+  } = useDebateFlow({
+    run,
+    onLayoutChange: () => {
+      // Fit view after layout change
+      setTimeout(() => fitView({ padding: 0.2, duration: 300 }), 50);
+    },
+  });
+
+  // Start streaming on mount if autoStart is true
+  useEffect(() => {
+    if (autoStart && run.run_id) {
+      startStream(run.run_id);
+    }
+  }, [autoStart, run.run_id, startStream]);
 
   // Fit view on initial mount
   useEffect(() => {
@@ -94,9 +102,12 @@ export function DebateFlowCanvas({
           <Badge variant={isStreaming ? "default" : "secondary"}>
             {isStreaming ? "Live" : "Completed"}
           </Badge>
-          <Badge variant="outline">
-            {formatPhase(externalCurrentPhase || currentPhase)}
-          </Badge>
+          <Badge variant="outline">{formatPhase(currentPhase)}</Badge>
+          {error && (
+            <Badge variant="destructive" className="text-xs">
+              Error: {error}
+            </Badge>
+          )}
         </Panel>
       </ReactFlow>
     </div>

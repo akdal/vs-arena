@@ -5,8 +5,6 @@
 import dagre from "@dagrejs/dagre";
 import type { Node, Edge } from "@xyflow/react";
 
-const dagreGraph = new dagre.graphlib.Graph().setDefaultEdgeLabel(() => ({}));
-
 interface LayoutOptions {
   direction?: "TB" | "LR"; // Top-to-Bottom or Left-to-Right
   nodeWidth?: number;
@@ -30,14 +28,14 @@ export function getLayoutedElements<N extends Node, E extends Edge>(
 
   const isHorizontal = direction === "LR";
 
+  // Create a new graph instance for each layout calculation
+  const dagreGraph = new dagre.graphlib.Graph().setDefaultEdgeLabel(() => ({}));
+
   dagreGraph.setGraph({
     rankdir: direction,
     ranksep: rankSep,
     nodesep: nodeSep,
   });
-
-  // Clear previous graph
-  dagreGraph.nodes().forEach((node) => dagreGraph.removeNode(node));
 
   // Add nodes
   nodes.forEach((node) => {

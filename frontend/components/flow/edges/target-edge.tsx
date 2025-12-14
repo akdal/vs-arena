@@ -6,19 +6,18 @@
  */
 
 import { memo } from "react";
-import { BaseEdge, getBezierPath } from "@xyflow/react";
+import { BaseEdge, getBezierPath, type EdgeProps } from "@xyflow/react";
 
-export const TargetEdge = memo(function TargetEdge(props: any) {
-  const {
-    id,
-    sourceX,
-    sourceY,
-    targetX,
-    targetY,
-    sourcePosition,
-    targetPosition,
-    markerEnd,
-  } = props;
+export const TargetEdge = memo(function TargetEdge({
+  id,
+  sourceX,
+  sourceY,
+  targetX,
+  targetY,
+  sourcePosition,
+  targetPosition,
+  markerEnd,
+}: EdgeProps) {
   const [edgePath] = getBezierPath({
     sourceX,
     sourceY,

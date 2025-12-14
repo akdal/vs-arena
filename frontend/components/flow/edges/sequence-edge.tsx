@@ -6,19 +6,18 @@
  */
 
 import { memo } from "react";
-import { BaseEdge, getSmoothStepPath } from "@xyflow/react";
+import { BaseEdge, getSmoothStepPath, type EdgeProps } from "@xyflow/react";
 
-export const SequenceEdge = memo(function SequenceEdge(props: any) {
-  const {
-    id,
-    sourceX,
-    sourceY,
-    targetX,
-    targetY,
-    sourcePosition,
-    targetPosition,
-    markerEnd,
-  } = props;
+export const SequenceEdge = memo(function SequenceEdge({
+  id,
+  sourceX,
+  sourceY,
+  targetX,
+  targetY,
+  sourcePosition,
+  targetPosition,
+  markerEnd,
+}: EdgeProps) {
   const [edgePath] = getSmoothStepPath({
     sourceX,
     sourceY,
