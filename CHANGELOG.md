@@ -90,6 +90,26 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - FlowProvider dependency comments
   - Flexible container heights
   - Error handling for localStorage access
+- **Judging System Frontend**: Score and verdict visualization (Phase 2.5)
+  - ScoreCard component:
+    - Phase-by-phase score display with progress bars
+    - Score categories: argumentation, rebuttal, delivery, strategy, total
+    - Agent-colored themes (Blue/Red)
+    - Streaming indicator during scoring
+    - ScoreRow memoized subcomponent
+  - VerdictPanel component:
+    - Winner announcement with Trophy/Scale icons
+    - ScoreComparisonBar: A vs B percentage visualization
+    - Judge's Analysis section with whitespace-pre-wrap
+    - Streaming state with "Deliberating..." indicator
+  - VerdictDisplay component (for ActionSidePanel):
+    - Compact verdict display from React Flow nodes
+    - Final scores calculation from score nodes
+    - Integrated into 4th tab of ActionSidePanel
+  - DebateStreamView updates:
+    - Score parsing with useMemo (opening/rebuttal/summary for A/B)
+    - Verdict parsing to extract winner from text
+    - VerdictPanel and ScoreCard integration
 
 ### Fixed
 - **Phase 2.1 Critical Issues** (from code-validator agent):
@@ -519,6 +539,66 @@ Arena UI 개선 - 레이아웃 컴포넌트, 턴 인디케이터, 사이드 패�
 **Commits**:
 - `16827d7` Phase 2.3: Arena UI complete
 - `bb4e8a8` Phase 2.3: Code quality improvements from validator
+
+---
+
+### 2025-12-15: Phase 2.5 Judging System Frontend 완료
+
+**목표 (Goal)**:
+Judging System Frontend 구현 - 점수 카드, 판정 패널, SSE 이벤트 처리
+
+**구현 내용 (Implementation)**:
+
+1. **ScoreCard 컴포넌트** (score-card.tsx):
+   - Phase별 점수 표시 (opening, rebuttal, summary)
+   - 점수 카테고리: argumentation, rebuttal, delivery, strategy, total
+   - 프로그레스 바로 시각화
+   - Agent별 컬러 테마 (Blue/Red)
+   - 스트리밍 상태 표시
+   - ScoreRow 메모이제이션
+
+2. **VerdictPanel 컴포넌트** (verdict-panel.tsx):
+   - 승자 발표 (Trophy/Scale 아이콘)
+   - ScoreComparisonBar: A vs B 퍼센티지 시각화
+   - 최종 점수 표시
+   - Judge's Analysis 섹션
+   - 스트리밍 상태 ("Deliberating...")
+
+3. **VerdictDisplay 컴포넌트** (verdict-display.tsx):
+   - ActionSidePanel용 컴팩트 판정 표시
+   - React Flow 노드에서 verdict 데이터 추출
+   - Score 노드에서 최종 점수 계산
+   - 4번째 탭으로 ActionSidePanel에 통합
+
+4. **DebateStreamView 업데이트** (debate-stream-view.tsx):
+   - parsedScores: useMemo로 점수 파싱 (A/B별 opening/rebuttal/summary)
+   - parsedVerdict: useMemo로 winner 추출 (텍스트 파싱)
+   - VerdictPanel 및 ScoreCard 컴포넌트 통합
+   - final_scores 처리
+
+5. **ActionSidePanel 업데이트** (action-side-panel/index.tsx):
+   - TabsList grid-cols-4로 변경
+   - Verdict 탭 추가
+   - VerdictDisplay 통합
+
+6. **Barrel Export 업데이트** (arena/index.ts):
+   - score-card, verdict-panel export 추가
+
+**결과 (Result)**:
+- Phase 2.5 완료로 Phase 2 (M2) 100% 달성
+- 실시간 점수 및 판정 시각화 완성
+- 두 가지 뷰 모드 모두에서 점수/판정 표시:
+  - Text View: DebateStreamView의 ScoreCard/VerdictPanel
+  - Flow View: ActionSidePanel의 VerdictDisplay
+- TypeScript 빌드 성공
+
+**관련 파일 (Related Files)**:
+- `/frontend/components/arena/score-card.tsx` - 점수 카드 (신규)
+- `/frontend/components/arena/verdict-panel.tsx` - 판정 패널 (신규)
+- `/frontend/components/arena/action-side-panel/verdict-display.tsx` - 사이드패널 판정 (신규)
+- `/frontend/components/arena/action-side-panel/index.tsx` - 4탭 구조로 수정
+- `/frontend/components/arena/index.ts` - export 추가
+- `/frontend/components/debate/debate-stream-view.tsx` - 점수/판정 파싱 및 통합
 
 ---
 

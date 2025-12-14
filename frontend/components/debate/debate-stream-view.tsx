@@ -2,19 +2,41 @@
 
 /**
  * DebateStreamView Component
- * Displays real-time debate streaming with phase indicators
+ * Displays real-time debate streaming with phase indicators and verdict
  */
 
-import { useEffect } from "react";
+import { useEffect, useMemo } from "react";
 import { useDebateStream } from "@/hooks/use-debate-stream";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
+import { VerdictPanel, type FinalScores } from "@/components/arena/verdict-panel";
+import { ScoreCard, type ScoreData } from "@/components/arena/score-card";
+import type { DebatePhase } from "@/lib/types";
 
 interface DebateStreamViewProps {
   runId: string;
   autoStart?: boolean;
+}
+
+interface ParsedScores {
+  agentA: {
+    opening?: ScoreData;
+    rebuttal?: ScoreData;
+    summary?: ScoreData;
+  };
+  agentB: {
+    opening?: ScoreData;
+    rebuttal?: ScoreData;
+    summary?: ScoreData;
+  };
+  final?: FinalScores;
+}
+
+interface ParsedVerdict {
+  winner?: "a" | "b" | "tie";
+  analysis?: string;
 }
 
 export function DebateStreamView({
@@ -36,11 +58,73 @@ export function DebateStreamView({
     if (autoStart && runId) {
       startStream(runId);
     }
-    // Cleanup on unmount
     return () => {
       stopStream();
     };
   }, [runId, autoStart, startStream, stopStream]);
+
+  // Parse scores into structured format
+  const parsedScores = useMemo((): ParsedScores => {
+    const result: ParsedScores = {
+      agentA: {},
+      agentB: {},
+    };
+
+    Object.entries(scores).forEach(([key, value]) => {
+      if (typeof value === "object" && value !== null) {
+        const scoreValue = value as Record<string, unknown>;
+        const phase = (scoreValue.phase as string) || key;
+        const scoreData = scoreValue.scores as ScoreData | undefined;
+
+        if (phase.includes("opening_a") && scoreData) {
+          result.agentA.opening = scoreData;
+        } else if (phase.includes("opening_b") && scoreData) {
+          result.agentB.opening = scoreData;
+        } else if (phase.includes("rebuttal_a") && scoreData) {
+          result.agentA.rebuttal = scoreData;
+        } else if (phase.includes("rebuttal_b") && scoreData) {
+          result.agentB.rebuttal = scoreData;
+        } else if (phase.includes("summary_a") && scoreData) {
+          result.agentA.summary = scoreData;
+        } else if (phase.includes("summary_b") && scoreData) {
+          result.agentB.summary = scoreData;
+        }
+
+        // Check for final scores in verdict event
+        if (scoreValue.final_scores) {
+          const finalScores = scoreValue.final_scores as Record<string, number>;
+          result.final = {
+            a: finalScores.a || 0,
+            b: finalScores.b || 0,
+          };
+        }
+      }
+    });
+
+    return result;
+  }, [scores]);
+
+  // Parse verdict into structured format
+  const parsedVerdict = useMemo((): ParsedVerdict => {
+    if (!verdict) return {};
+
+    // Try to parse winner from verdict string
+    const lowerVerdict = verdict.toLowerCase();
+    let winner: "a" | "b" | "tie" | undefined;
+
+    if (lowerVerdict.includes("agent a") && lowerVerdict.includes("win")) {
+      winner = "a";
+    } else if (lowerVerdict.includes("agent b") && lowerVerdict.includes("win")) {
+      winner = "b";
+    } else if (lowerVerdict.includes("tie") || lowerVerdict.includes("draw")) {
+      winner = "tie";
+    }
+
+    return {
+      winner,
+      analysis: verdict,
+    };
+  }, [verdict]);
 
   const formatPhase = (phase: string | null) => {
     if (!phase) return "Waiting...";
@@ -49,6 +133,14 @@ export function DebateStreamView({
       .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
       .join(" ");
   };
+
+  const hasScores =
+    parsedScores.agentA.opening ||
+    parsedScores.agentA.rebuttal ||
+    parsedScores.agentA.summary ||
+    parsedScores.agentB.opening ||
+    parsedScores.agentB.rebuttal ||
+    parsedScores.agentB.summary;
 
   return (
     <div className="space-y-6">
@@ -100,29 +192,67 @@ export function DebateStreamView({
       </Card>
 
       {/* Scores Display */}
-      {Object.keys(scores).length > 0 && (
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-lg">Scores</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <pre className="text-sm">
-              {JSON.stringify(scores, null, 2)}
-            </pre>
-          </CardContent>
-        </Card>
+      {hasScores && (
+        <div className="space-y-4">
+          <h3 className="text-lg font-semibold">Scores</h3>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {/* Agent A Scores */}
+            {parsedScores.agentA.opening && (
+              <ScoreCard
+                phase={"score_opening_a" as DebatePhase}
+                agent="a"
+                scores={parsedScores.agentA.opening}
+              />
+            )}
+            {parsedScores.agentA.rebuttal && (
+              <ScoreCard
+                phase={"score_rebuttal_a" as DebatePhase}
+                agent="a"
+                scores={parsedScores.agentA.rebuttal}
+              />
+            )}
+            {parsedScores.agentA.summary && (
+              <ScoreCard
+                phase={"score_summary_a" as DebatePhase}
+                agent="a"
+                scores={parsedScores.agentA.summary}
+              />
+            )}
+
+            {/* Agent B Scores */}
+            {parsedScores.agentB.opening && (
+              <ScoreCard
+                phase={"score_opening_b" as DebatePhase}
+                agent="b"
+                scores={parsedScores.agentB.opening}
+              />
+            )}
+            {parsedScores.agentB.rebuttal && (
+              <ScoreCard
+                phase={"score_rebuttal_b" as DebatePhase}
+                agent="b"
+                scores={parsedScores.agentB.rebuttal}
+              />
+            )}
+            {parsedScores.agentB.summary && (
+              <ScoreCard
+                phase={"score_summary_b" as DebatePhase}
+                agent="b"
+                scores={parsedScores.agentB.summary}
+              />
+            )}
+          </div>
+        </div>
       )}
 
       {/* Verdict Display */}
-      {verdict && (
-        <Card className="border-2 border-primary">
-          <CardHeader>
-            <CardTitle className="text-lg">Final Verdict</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <p className="text-lg font-medium">{verdict}</p>
-          </CardContent>
-        </Card>
+      {(verdict || (isStreaming && currentPhase === "judge_verdict")) && (
+        <VerdictPanel
+          winner={parsedVerdict.winner}
+          finalScores={parsedScores.final}
+          analysis={parsedVerdict.analysis}
+          isStreaming={isStreaming && currentPhase === "judge_verdict"}
+        />
       )}
 
       {/* Error Display */}

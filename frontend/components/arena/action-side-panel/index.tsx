@@ -10,6 +10,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ScoreDisplay } from "./score-display";
 import { ProgressIndicator } from "./progress-indicator";
 import { DebateLog } from "./debate-log";
+import { VerdictDisplay } from "./verdict-display";
 import { getCompletedPhases } from "../constants";
 
 export interface ActionSidePanelProps {
@@ -58,9 +59,12 @@ export const ActionSidePanel = memo(function ActionSidePanel({
         {isOpen && (
           <div className="p-4 h-full overflow-y-auto">
             <Tabs defaultValue="scores" className="w-full">
-              <TabsList className="grid w-full grid-cols-3">
+              <TabsList className="grid w-full grid-cols-4">
                 <TabsTrigger value="scores" className="text-xs">
                   Scores
+                </TabsTrigger>
+                <TabsTrigger value="verdict" className="text-xs">
+                  Verdict
                 </TabsTrigger>
                 <TabsTrigger value="progress" className="text-xs">
                   Progress
@@ -75,6 +79,14 @@ export const ActionSidePanel = memo(function ActionSidePanel({
                   nodes={nodes}
                   agentA={run.agent_a}
                   agentB={run.agent_b}
+                />
+              </TabsContent>
+
+              <TabsContent value="verdict" className="mt-4">
+                <VerdictDisplay
+                  nodes={nodes}
+                  agentAName={run.agent_a.name}
+                  agentBName={run.agent_b.name}
                 />
               </TabsContent>
 

@@ -8,3 +8,5 @@ export * from "./arena-layout";
 export * from "./turn-indicator";
 export * from "./arena-flow-view";
 export * from "./action-side-panel";
+export * from "./score-card";
+export * from "./verdict-panel";

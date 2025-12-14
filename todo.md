@@ -239,13 +239,13 @@
   - [ ] 개선 제안 생성
 
 ### 2.5 Judging System - Frontend
-- [ ] ScoreCard 컴포넌트 (단계별 점수)
-- [ ] VerdictPanel 컴포넌트
-  - [ ] 승자 표시
-  - [ ] 점수 비교 차트
-  - [ ] 상세 분석 텍스트
-- [ ] SSE `score` 이벤트 처리
-- [ ] SSE `verdict` 이벤트 처리
+- [x] ScoreCard 컴포넌트 (단계별 점수)
+- [x] VerdictPanel 컴포넌트
+  - [x] 승자 표시
+  - [x] 점수 비교 차트
+  - [x] 상세 분석 텍스트
+- [x] SSE `score` 이벤트 처리
+- [x] SSE `verdict` 이벤트 처리
 
 ---
 
@@ -330,7 +330,7 @@
 |-------|--------|----------|
 | Phase 0: Setup | **Completed** | 95% |
 | Phase 1: M1 | **Completed** | 100% (Backend + Frontend Agent Module) |
-| Phase 2: M2 | **In Progress** | 75% (2.1, 2.2, 2.3 완료) |
+| Phase 2: M2 | **Completed** | 100% (2.1, 2.2, 2.3, 2.4, 2.5 완료) |
 | Phase 3: M3 | Not Started | 0% |
 | Phase 4: Polish | Not Started | 0% |
 
