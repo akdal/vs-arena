@@ -292,7 +292,7 @@ Phase 1.8 Frontend Agent Module 구현 - Agent CRUD, Preview SSE 스트리밍, T
 - `/frontend/next.config.ts` - Next.js 설정 수정
 - `/frontend/tailwind.config.ts` - Tailwind 설정 수정
 
-**Commit**: (to be added)
+**Commit**: 6a3113a Phase 1-M1.8: Frontend Agent Module complete
 
 ---
 
