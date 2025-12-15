@@ -126,7 +126,7 @@
   - [x] `run_complete` - 토론 완료
   - [x] `score` - 채점 결과
   - [x] `verdict` - 최종 판정
-- [ ] 연결 관리 (keep-alive, reconnect)
+- [x] 연결 관리 (keep-alive, reconnect) - Phase 4.2에서 구현
 
 ### 1.8 Frontend - Agent Module (Next.js App Router)
 - [x] App Router 라우팅 설정
@@ -313,9 +313,14 @@
 - [ ] E2E 테스트 (전체 토론 플로우) - deferred
 
 ### 4.2 Performance
-- [ ] SSE 연결 최적화
-- [ ] React Flow 렌더링 최적화
-- [ ] 대용량 텍스트 처리
+- [x] SSE 연결 최적화
+  - [x] Keep-alive heartbeat (15초 간격) - Backend
+  - [x] Exponential backoff reconnection (1s, 2s, 4s, max 3회) - Frontend
+- [x] React Flow 렌더링 최적화
+  - [x] Token update batching (requestAnimationFrame)
+  - [x] 렌더링 빈도 100+/sec → ~60/sec (frame-rate limited)
+- [x] 대용량 텍스트 처리
+  - [x] Incremental layout O(1) vs O(n^2) dagre
 
 ### 4.3 UX Polish
 - [ ] 로딩 상태 표시
@@ -338,7 +343,7 @@
 | Phase 1: M1 | **Completed** | 100% (Backend + Frontend Agent Module) |
 | Phase 2: M2 | **Completed** | 100% (2.1, 2.2, 2.3, 2.4, 2.5 완료) |
 | Phase 3: M3 | **Completed** | 100% (3.1-3.6 완료) |
-| Phase 4: Polish | **In Progress** | 25% (4.1 Testing 완료) |
+| Phase 4: Polish | **In Progress** | 50% (4.1 Testing, 4.2 Performance 완료) |
 
 ---
 

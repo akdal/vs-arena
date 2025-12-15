@@ -1,5 +1,6 @@
 /**
  * Dagre Layout Utility for Auto-positioning Nodes
+ * Includes both full layout and incremental layout for performance
  */
 
 import dagre from "@dagrejs/dagre";
@@ -11,6 +12,30 @@ interface LayoutOptions {
   nodeHeight?: number;
   rankSep?: number;
   nodeSep?: number;
+}
+
+/**
+ * Get position for a new node incrementally (O(1) instead of O(n²) for dagre)
+ * Assumes top-to-bottom layout where new nodes are added below existing ones
+ */
+export function getIncrementalNodePosition<N extends Node>(
+  existingNodes: N[],
+  options: Pick<LayoutOptions, "nodeHeight" | "nodeWidth" | "rankSep"> = {}
+): { x: number; y: number } {
+  const { nodeHeight = 150, nodeWidth = 320, rankSep = 80 } = options;
+
+  if (existingNodes.length === 0) {
+    // First node - center it horizontally
+    return { x: 0, y: 0 };
+  }
+
+  // Find the last node (deepest in the flow)
+  const lastNode = existingNodes[existingNodes.length - 1];
+
+  return {
+    x: lastNode.position.x, // Same x position (vertical stack)
+    y: lastNode.position.y + nodeHeight + rankSep, // Below the last node
+  };
 }
 
 export function getLayoutedElements<N extends Node, E extends Edge>(

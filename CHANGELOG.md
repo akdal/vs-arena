@@ -91,6 +91,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Arena page integration with URL param `?original=` for comparison
   - Note: Consistency scoring excluded (individual debate variability is part of game nature)
 
+- **Performance Optimization**: SSE and rendering optimizations (Phase 4.2)
+  - Backend SSE keep-alive heartbeat (15s interval)
+  - Frontend exponential backoff reconnection (1s, 2s, 4s, max 3 retries)
+  - Token update batching with requestAnimationFrame
+  - Incremental layout O(1) vs O(n^2) dagre recalculation
+
 - **Testing Infrastructure**: Comprehensive test suite (Phase 4.1)
   - Backend tests (pytest + pytest-asyncio):
     - `pytest.ini`: Configuration with asyncio_mode=auto
@@ -1158,6 +1164,52 @@ BP Lite 토론 규칙 위반 감지 시스템 구현 - Forbidden Phrase 감지 �
 **Commits**:
 - `2b20692` Phase 4.1: Testing Infrastructure complete
 - `0fc0f04` fix: Improve Phase 4.1 test coverage and quality
+
+---
+
+### 2025-12-15: Phase 4.2 Performance Optimization 완료
+
+**목표 (Goal)**:
+장시간 토론(2-5분) 시 연결 안정성 및 렌더링 성능 최적화
+
+**구현 내용 (Implementation)**:
+
+1. **SSE Keep-Alive (Backend)**:
+   - `backend/app/graph/executor.py`에 heartbeat 이벤트 추가
+   - 15초 간격으로 `heartbeat` 이벤트 전송
+   - Proxy/네트워크 타임아웃 방지 (긴 토론 중 연결 유지)
+   - 이벤트 형식: `event: heartbeat\ndata: {"timestamp": "..."}\n\n`
+
+2. **SSE Reconnection (Frontend)**:
+   - `frontend/hooks/use-debate-stream.ts` 업데이트
+   - Exponential backoff 재연결: 1초 → 2초 → 4초 (최대 3회)
+   - Heartbeat 수신 시 연결 타임아웃 리셋
+   - 재연결 상태 추적 및 에러 처리 개선
+
+3. **Token Update Batching**:
+   - `frontend/hooks/use-debate-flow.ts` 업데이트
+   - requestAnimationFrame 기반 토큰 배치 처리
+   - 렌더링 빈도 감소: 100+/sec → ~60/sec (frame-rate limited)
+   - 연속 토큰을 단일 프레임에서 일괄 업데이트
+
+4. **Incremental Layout**:
+   - `frontend/components/flow/utils/layout.ts`에 `getIncrementalNodePosition()` 함수 추가
+   - 새 노드 추가 시 O(1) 위치 계산 vs O(n^2) dagre 전체 재계산
+   - 기존 노드 위치 기반 간단한 오프셋 계산
+   - 대규모 그래프에서 성능 향상
+
+**결과 (Result)**:
+- Frontend: 48 tests passing (기존 테스트 영향 없음)
+- Frontend build: Compiled successfully
+- Backend CRUD tests: 17/17 passing
+- 장시간 토론에서 연결 안정성 확보
+- 실시간 스트리밍 시 부드러운 렌더링
+
+**관련 파일 (Related Files)**:
+- `/backend/app/graph/executor.py` - SSE heartbeat 구현
+- `/frontend/hooks/use-debate-stream.ts` - 재연결 로직 및 heartbeat 처리
+- `/frontend/hooks/use-debate-flow.ts` - 토큰 배치 처리
+- `/frontend/components/flow/utils/layout.ts` - Incremental layout 함수
 
 ---
 

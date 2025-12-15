@@ -6,6 +6,7 @@ Server-Sent Events (SSE) streaming support.
 """
 import json
 import logging
+import time
 from typing import AsyncGenerator, Dict, Any
 from uuid import uuid4, UUID
 from datetime import datetime
@@ -213,6 +214,18 @@ async def execute_debate_with_streaming(
     async def event_generator() -> AsyncGenerator[Dict[str, str], None]:
         """Generate SSE events for the debate execution."""
         try:
+            # Track last heartbeat time for keep-alive (prevents proxy/network timeouts)
+            last_heartbeat = time.time()
+            HEARTBEAT_INTERVAL = 15  # seconds
+
+            async def maybe_send_heartbeat():
+                """Send heartbeat if interval has passed. Returns event dict or None."""
+                nonlocal last_heartbeat
+                if time.time() - last_heartbeat > HEARTBEAT_INTERVAL:
+                    last_heartbeat = time.time()
+                    return {"event": "heartbeat", "data": "{}"}
+                return None
+
             # Initialize state
             state = await initialize_debate_state(run_id, db)
             logger.info(f"Starting debate execution for run {run_id}")
@@ -299,6 +312,11 @@ async def execute_debate_with_streaming(
                         "turn_id": state["turns"][-1]["turn_id"] if state["turns"] else None
                     })
                 }
+
+                # Send heartbeat if interval has passed (keep-alive for long debates)
+                heartbeat = await maybe_send_heartbeat()
+                if heartbeat:
+                    yield heartbeat
 
             # Send final verdict
             yield {

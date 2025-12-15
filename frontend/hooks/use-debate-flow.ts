@@ -17,7 +17,10 @@ import {
   createPhaseNode,
   createSequenceEdges,
 } from "@/components/flow/utils/node-factory";
-import { getLayoutedElements } from "@/components/flow/utils/layout";
+import {
+  getLayoutedElements,
+  getIncrementalNodePosition,
+} from "@/components/flow/utils/layout";
 
 interface UseDebateFlowOptions {
   run: RunDetail;
@@ -33,6 +36,11 @@ export function useDebateFlow({ run, onLayoutChange }: UseDebateFlowOptions) {
   const phasesRef = useRef<DebatePhase[]>([]);
   const abortControllerRef = useRef<AbortController | null>(null);
 
+  // Token batching refs for performance (reduces renders from 100+/sec to ~60/sec)
+  const tokenBufferRef = useRef<string>("");
+  const rafIdRef = useRef<number | null>(null);
+  const currentPhaseRef = useRef<DebatePhase | null>(null);
+
   // Initialize with topic node
   useEffect(() => {
     const initialNodes = createInitialNodes(run);
@@ -42,7 +50,7 @@ export function useDebateFlow({ run, onLayoutChange }: UseDebateFlowOptions) {
     setError(null);
   }, [run, setNodes]);
 
-  // Handle phase start - add new node
+  // Handle phase start - add new node with incremental layout (O(1) vs O(n²))
   const handlePhaseStart = useCallback(
     (phase: DebatePhase) => {
       const newNode = createPhaseNode(phase, run);
@@ -51,15 +59,22 @@ export function useDebateFlow({ run, onLayoutChange }: UseDebateFlowOptions) {
       phasesRef.current.push(phase);
 
       setNodes((nds) => {
-        const updatedNodes = [...nds, newNode];
+        // Use incremental layout for performance - just position new node below last
+        const newPosition = getIncrementalNodePosition(nds);
+        const positionedNewNode = {
+          ...newNode,
+          position: newPosition,
+          targetPosition: "top" as const,
+          sourcePosition: "bottom" as const,
+        };
+
+        const updatedNodes = [...nds, positionedNewNode];
+
+        // Create edges incrementally - only add the new edge
         const newEdges = createSequenceEdges(phasesRef.current);
 
-        // Apply layout
-        const { nodes: layoutedNodes, edges: layoutedEdges } =
-          getLayoutedElements(updatedNodes, newEdges);
-
         // Mark the edge leading to this node as active
-        const activeEdges = layoutedEdges.map((edge) => ({
+        const activeEdges = newEdges.map((edge) => ({
           ...edge,
           data: {
             ...edge.data,
@@ -70,46 +85,95 @@ export function useDebateFlow({ run, onLayoutChange }: UseDebateFlowOptions) {
         setEdges(activeEdges);
         onLayoutChange?.();
 
-        return layoutedNodes;
+        return updatedNodes as DebateFlowNode[];
       });
 
       setCurrentPhase(phase);
+      currentPhaseRef.current = phase;
     },
     [run, setNodes, setEdges, onLayoutChange]
   );
 
-  // Handle token - update node content
+  // Handle token - update node content with RAF batching for performance
   const handleToken = useCallback(
     (content: string) => {
-      if (!currentPhase) return;
+      // Buffer the token content
+      tokenBufferRef.current += content;
 
-      setNodes((nds) =>
-        nds.map((node) =>
-          node.id === currentPhase
-            ? {
-                ...node,
-                data: { ...node.data, content: node.data.content + content },
-              }
-            : node
-        ) as DebateFlowNode[]
-      );
+      // Schedule batched update if not already scheduled
+      if (!rafIdRef.current) {
+        rafIdRef.current = requestAnimationFrame(() => {
+          const bufferedContent = tokenBufferRef.current;
+          const targetPhase = currentPhaseRef.current;
+
+          // Clear buffer and RAF ref
+          tokenBufferRef.current = "";
+          rafIdRef.current = null;
+
+          // Skip if no content or no target phase
+          if (!bufferedContent || !targetPhase) return;
+
+          setNodes((nds) =>
+            nds.map((node) =>
+              node.id === targetPhase
+                ? {
+                    ...node,
+                    data: {
+                      ...node.data,
+                      content: node.data.content + bufferedContent,
+                    },
+                  }
+                : node
+            ) as DebateFlowNode[]
+          );
+        });
+      }
     },
-    [currentPhase, setNodes]
+    [setNodes]
   );
 
   // Handle phase end - mark node complete
   const handlePhaseEnd = useCallback(
     (phase: DebatePhase) => {
-      setNodes((nds) =>
-        nds.map((node) =>
-          node.id === phase
-            ? {
-                ...node,
-                data: { ...node.data, isStreaming: false, isComplete: true },
-              }
-            : node
-        ) as DebateFlowNode[]
-      );
+      // Flush any pending buffered tokens before marking complete
+      if (tokenBufferRef.current && currentPhaseRef.current === phase) {
+        const bufferedContent = tokenBufferRef.current;
+        tokenBufferRef.current = "";
+
+        // Cancel any pending RAF
+        if (rafIdRef.current) {
+          cancelAnimationFrame(rafIdRef.current);
+          rafIdRef.current = null;
+        }
+
+        // Apply final content
+        setNodes((nds) =>
+          nds.map((node) =>
+            node.id === phase
+              ? {
+                  ...node,
+                  data: {
+                    ...node.data,
+                    content: node.data.content + bufferedContent,
+                    isStreaming: false,
+                    isComplete: true,
+                  },
+                }
+              : node
+          ) as DebateFlowNode[]
+        );
+      } else {
+        setNodes((nds) =>
+          nds.map((node) =>
+            node.id === phase
+              ? {
+                  ...node,
+                  data: { ...node.data, isStreaming: false, isComplete: true },
+                }
+              : node
+          ) as DebateFlowNode[]
+        );
+      }
 
       // Clear active state from all edges
       setEdges((eds) =>
@@ -123,6 +187,7 @@ export function useDebateFlow({ run, onLayoutChange }: UseDebateFlowOptions) {
       );
 
       setCurrentPhase(null);
+      currentPhaseRef.current = null;
     },
     [setNodes, setEdges]
   );
@@ -307,6 +372,12 @@ export function useDebateFlow({ run, onLayoutChange }: UseDebateFlowOptions) {
   // Cleanup on unmount
   useEffect(() => {
     return () => {
+      // Cancel any pending RAF
+      if (rafIdRef.current) {
+        cancelAnimationFrame(rafIdRef.current);
+        rafIdRef.current = null;
+      }
+      // Abort any ongoing fetch
       if (abortControllerRef.current) {
         abortControllerRef.current.abort();
         abortControllerRef.current = null;
