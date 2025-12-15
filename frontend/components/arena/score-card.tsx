@@ -4,7 +4,7 @@ import { memo } from "react";
 import { cn } from "@/lib/utils";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { agentStyles, PHASE_LABELS } from "./constants";
+import { agentStyles } from "./constants";
 import type { DebatePhase } from "@/lib/types";
 
 export interface ScoreData {
@@ -66,7 +66,6 @@ export const ScoreCard = memo(function ScoreCard({
   className,
 }: ScoreCardProps) {
   const styles = agentStyles[agent];
-  const phaseLabel = PHASE_LABELS[phase] || phase;
 
   // Extract phase type (opening, rebuttal, summary)
   const phaseType = phase.includes("opening")
