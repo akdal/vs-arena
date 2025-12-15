@@ -90,7 +90,8 @@ async def score_opening_a(state: DebateState) -> DebateState:
     violations = detect_forbidden_phrases(opening_turn["content"], forbidden_phrases)
 
     if violations:
-        logger.info(f"Detected {len(violations)} forbidden phrase violations in opening_a")
+        phrases = [v["phrase"] for v in violations]
+        logger.info(f"Detected {len(violations)} forbidden phrase violations in opening_a: {phrases}")
 
     prompt = build_scoring_prompt_opening(
         turn_content=opening_turn["content"],
@@ -157,7 +158,8 @@ async def score_opening_b(state: DebateState) -> DebateState:
     violations = detect_forbidden_phrases(opening_turn["content"], forbidden_phrases)
 
     if violations:
-        logger.info(f"Detected {len(violations)} forbidden phrase violations in opening_b")
+        phrases = [v["phrase"] for v in violations]
+        logger.info(f"Detected {len(violations)} forbidden phrase violations in opening_b: {phrases}")
 
     prompt = build_scoring_prompt_opening(
         turn_content=opening_turn["content"],
@@ -225,7 +227,8 @@ async def score_rebuttal_a(state: DebateState) -> DebateState:
     violations = detect_forbidden_phrases(rebuttal_turn["content"], forbidden_phrases)
 
     if violations:
-        logger.info(f"Detected {len(violations)} forbidden phrase violations in rebuttal_a")
+        phrases = [v["phrase"] for v in violations]
+        logger.info(f"Detected {len(violations)} forbidden phrase violations in rebuttal_a: {phrases}")
 
     prompt = build_scoring_prompt_rebuttal(
         turn_content=rebuttal_turn["content"],
@@ -293,7 +296,8 @@ async def score_rebuttal_b(state: DebateState) -> DebateState:
     violations = detect_forbidden_phrases(rebuttal_turn["content"], forbidden_phrases)
 
     if violations:
-        logger.info(f"Detected {len(violations)} forbidden phrase violations in rebuttal_b")
+        phrases = [v["phrase"] for v in violations]
+        logger.info(f"Detected {len(violations)} forbidden phrase violations in rebuttal_b: {phrases}")
 
     prompt = build_scoring_prompt_rebuttal(
         turn_content=rebuttal_turn["content"],
@@ -359,7 +363,8 @@ async def score_summary_a(state: DebateState) -> DebateState:
     violations = detect_forbidden_phrases(summary_turn["content"], forbidden_phrases)
 
     if violations:
-        logger.info(f"Detected {len(violations)} forbidden phrase violations in summary_a")
+        phrases = [v["phrase"] for v in violations]
+        logger.info(f"Detected {len(violations)} forbidden phrase violations in summary_a: {phrases}")
 
     prompt = build_scoring_prompt_summary(
         turn_content=summary_turn["content"],
@@ -426,7 +431,8 @@ async def score_summary_b(state: DebateState) -> DebateState:
     violations = detect_forbidden_phrases(summary_turn["content"], forbidden_phrases)
 
     if violations:
-        logger.info(f"Detected {len(violations)} forbidden phrase violations in summary_b")
+        phrases = [v["phrase"] for v in violations]
+        logger.info(f"Detected {len(violations)} forbidden phrase violations in summary_b: {phrases}")
 
     prompt = build_scoring_prompt_summary(
         turn_content=summary_turn["content"],

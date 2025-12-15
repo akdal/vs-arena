@@ -191,7 +191,7 @@ Scoring Criteria (0-10 for each sub-criterion):
 **Delivery ({rubric.get('delivery_weight', 20)}%)**
 - Clarity (0-10): Clear refutation logic
 
-**Penalties:**
+**Strategy ({rubric.get('strategy_weight', 15)}%)**
 - Forbidden Phrase Penalty: -2 per violation (if any)
 
 Provide your scores in this exact JSON format:
@@ -207,7 +207,9 @@ Provide your scores in this exact JSON format:
     "delivery": {{
         "clarity": <0-10>
     }},
-    "forbidden_phrase_penalty": <0 or negative multiple of 2>,
+    "strategy": {{
+        "forbidden_phrase_penalty": <0 or negative multiple of 2>
+    }},
     "total": <calculated sum including penalty>,
     "forbidden_phrases_detected": [<list of detected phrases or empty>],
     "justification": "<brief 1-2 sentence explanation>"

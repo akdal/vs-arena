@@ -3,7 +3,7 @@ Utility functions for debate nodes
 """
 import asyncio
 import logging
-from typing import AsyncGenerator, Dict, Any, List
+from typing import AsyncGenerator, Dict, Any, List, TypedDict
 import httpx
 
 from app.services.ollama import stream_ollama, call_ollama
@@ -230,7 +230,13 @@ def parse_json_scores(response: str, default_score: int = 7) -> Dict[str, Any]:
     }
 
 
-def detect_forbidden_phrases(content: str, forbidden_phrases: List[str]) -> List[Dict[str, str]]:
+class ViolationInfo(TypedDict):
+    """Type definition for forbidden phrase violation."""
+    phrase: str
+    context: str
+
+
+def detect_forbidden_phrases(content: str, forbidden_phrases: List[str]) -> List[ViolationInfo]:
     """
     Detect forbidden phrases in content using case-insensitive matching.
 
@@ -241,13 +247,17 @@ def detect_forbidden_phrases(content: str, forbidden_phrases: List[str]) -> List
     Returns:
         List of violations with phrase and context
     """
-    violations = []
+    violations: List[ViolationInfo] = []
     if not forbidden_phrases:
         return violations
 
     content_lower = content.lower()
 
     for phrase in forbidden_phrases:
+        # Skip empty or whitespace-only phrases
+        if not phrase or not phrase.strip():
+            continue
+
         phrase_lower = phrase.lower()
         # Find all occurrences
         start_idx = 0
