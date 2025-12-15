@@ -27,6 +27,7 @@ import { useKeyboardShortcuts, formatShortcut, type ShortcutConfig } from "@/hoo
 import { usePersistentToggle } from "@/hooks/use-persistent-state";
 import type { RunDetail } from "@/lib/types";
 import { Badge } from "@/components/ui/badge";
+import { ConnectionStatus } from "@/components/ui/connection-status";
 import { TurnIndicator } from "./turn-indicator";
 import { ActionSidePanel } from "./action-side-panel";
 import { ArenaLayout } from "./arena-layout";
@@ -60,6 +61,9 @@ function FlowContent({
     currentPhase,
     isStreaming,
     error,
+    isReconnecting,
+    reconnectAttempts,
+    maxReconnectAttempts,
     onNodesChange,
     onEdgesChange,
     startStream,
@@ -243,6 +247,16 @@ function FlowContent({
                 </div>
               </Panel>
             )}
+
+            {/* Connection Status */}
+            <Panel position="bottom-left">
+              <ConnectionStatus
+                isConnected={isStreaming}
+                isReconnecting={isReconnecting}
+                reconnectAttempts={reconnectAttempts}
+                maxAttempts={maxReconnectAttempts}
+              />
+            </Panel>
           </ReactFlow>
         </div>
       }
