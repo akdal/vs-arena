@@ -59,6 +59,21 @@ const ERROR_MESSAGES: Record<string, ErrorMapping> = {
     description: "Could not connect to Ollama. Please ensure Ollama is running locally.",
     action: "retry",
   },
+  RUN_FAILED: {
+    title: "Debate failed",
+    description: "This debate failed during execution. Please go back and start a new debate.",
+    action: "none",
+  },
+  RUN_COMPLETED: {
+    title: "Debate already finished",
+    description: "This debate has already completed. You can view the results or replay.",
+    action: "none",
+  },
+  RUN_IN_PROGRESS: {
+    title: "Debate in progress",
+    description: "This debate is already running in another session.",
+    action: "none",
+  },
   BAD_REQUEST: {
     title: "Invalid request",
     description: "The request was invalid. Please check your input and try again.",
@@ -132,6 +147,19 @@ export function getUserFriendlyError(error: string | Error): FriendlyError {
     return { ...ERROR_MESSAGES.OLLAMA_ERROR, originalError: errorString };
   }
 
+  // Run status errors (check before generic 400)
+  if (lowerError.includes("run previously failed") || lowerError.includes("run failed")) {
+    return { ...ERROR_MESSAGES.RUN_FAILED, originalError: errorString };
+  }
+
+  if (lowerError.includes("run already completed") || lowerError.includes("already completed")) {
+    return { ...ERROR_MESSAGES.RUN_COMPLETED, originalError: errorString };
+  }
+
+  if (lowerError.includes("run already in progress") || lowerError.includes("already in progress")) {
+    return { ...ERROR_MESSAGES.RUN_IN_PROGRESS, originalError: errorString };
+  }
+
   if (lowerError.includes("400") || lowerError.includes("bad request")) {
     return { ...ERROR_MESSAGES.BAD_REQUEST, originalError: errorString };
   }
@@ -183,4 +211,35 @@ export function getMaxReconnectsError(): FriendlyError {
     action: "retry",
     originalError: "Max reconnection attempts exceeded",
   };
+}
+
+/**
+ * Permanent error patterns that should NOT trigger reconnection
+ * These are errors where retrying won't help - the state is final
+ */
+const PERMANENT_ERROR_PATTERNS = [
+  "run previously failed",
+  "run already completed",
+  "run already in progress",
+  "already running in another session",
+  "not found",
+  "unauthorized",
+  "bad request",
+  "invalid",
+  "http 400",
+  "http 401",
+  "http 403",
+  "http 404",
+  "http 409",
+];
+
+/**
+ * Check if an error is permanent (should not attempt reconnection)
+ */
+export function isPermanentError(error: string | Error): boolean {
+  const errorString = error instanceof Error ? error.message : error;
+  if (!errorString) return false;
+
+  const lowerError = errorString.toLowerCase();
+  return PERMANENT_ERROR_PATTERNS.some((pattern) => lowerError.includes(pattern));
 }

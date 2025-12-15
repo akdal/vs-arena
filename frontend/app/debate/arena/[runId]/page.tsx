@@ -8,7 +8,9 @@
 import { useState } from "react";
 import { useParams, useSearchParams } from "next/navigation";
 import Link from "next/link";
-import { useRun, useRunTurns } from "@/hooks/use-debate";
+import { useQuery } from "@tanstack/react-query";
+import { useRunTurns } from "@/hooks/use-debate";
+import { getRun } from "@/lib/api-client";
 import { DebateStreamView } from "@/components/debate/debate-stream-view";
 import { FlowProvider } from "@/components/flow";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -29,11 +31,26 @@ export default function DebateArenaPage() {
   const originalRunId = searchParams.get("original"); // For swap test comparison
   const [viewMode, setViewMode] = useState<ViewMode>("text");
 
-  const { data: run, isLoading, error } = useRun(runId);
+  // Poll run status every 3s when running to detect completion
+  const { data: run, isLoading, error } = useQuery({
+    queryKey: ["debates", "runs", "detail", runId],
+    queryFn: () => getRun(runId),
+    enabled: !!runId,
+    refetchInterval: (query) => {
+      // Poll every 3s while running
+      return query.state.data?.status === "running" ? 3000 : false;
+    },
+  });
 
-  // Fetch turns for replay mode
-  const { data: turns } = useRunTurns(viewMode === "replay" ? runId : null);
+  const isRunning = run?.status === "running";
   const isCompleted = run?.status === "completed";
+
+  // Fetch turns for replay mode OR when watching a running debate
+  // Poll every 2 seconds when running to show live progress
+  const { data: turns } = useRunTurns(
+    viewMode === "replay" || isRunning ? runId : null,
+    isRunning ? 2000 : 0  // Poll every 2s when running
+  );
 
   // Show comparison when this is a swap test run and both runs are completed
   const showComparison = originalRunId && isCompleted;
@@ -91,6 +108,56 @@ export default function DebateArenaPage() {
                 Back to Setup
               </Button>
             </Link>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
+
+  // Handle failed runs gracefully - don't try to stream
+  if (run.status === "failed") {
+    return (
+      <div className="max-w-6xl mx-auto py-4 sm:py-8 px-4 sm:px-6">
+        <Card className="border-destructive/50">
+          <CardHeader>
+            <div className="flex items-center gap-3">
+              <Badge variant="destructive">Failed</Badge>
+              <CardTitle>Debate Failed</CardTitle>
+            </div>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div>
+              <p className="text-sm text-muted-foreground mb-1">Topic</p>
+              <p className="font-medium">{run.topic}</p>
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div>
+                <p className="text-sm text-muted-foreground mb-1">Agent A</p>
+                <p className="font-medium">{run.agent_a.name}</p>
+                <Badge variant="outline" className="mt-1">{run.position_a}</Badge>
+              </div>
+              <div>
+                <p className="text-sm text-muted-foreground mb-1">Agent B</p>
+                <p className="font-medium">{run.agent_b.name}</p>
+                <Badge variant="outline" className="mt-1">{run.position_b}</Badge>
+              </div>
+              <div>
+                <p className="text-sm text-muted-foreground mb-1">Judge</p>
+                <p className="font-medium">{run.agent_j.name}</p>
+              </div>
+            </div>
+            <p className="text-muted-foreground text-sm">
+              This debate failed during execution. This can happen due to LLM connection issues or timeouts.
+              You can start a new debate with the same configuration.
+            </p>
+            <div className="flex gap-3 pt-2">
+              <Link href="/debate">
+                <Button>
+                  <ArrowLeft className="mr-2 h-4 w-4" />
+                  Start New Debate
+                </Button>
+              </Link>
+            </div>
           </CardContent>
         </Card>
       </div>
@@ -192,6 +259,36 @@ export default function DebateArenaPage() {
     </div>
   );
 
+  // For running debates, show turns-based view instead of streaming
+  // This allows multiple viewers to watch the same debate
+  if (isRunning) {
+    return (
+      <div className="max-w-7xl mx-auto py-4 sm:py-8 px-4 sm:px-6">
+        {headerContent}
+        <div className="mt-4 sm:mt-6">
+          {turns && turns.length > 0 ? (
+            <FlowProvider>
+              <ArenaReplayView
+                run={run}
+                turns={turns}
+                header={null}
+                isLive={true}
+              />
+            </FlowProvider>
+          ) : (
+            <Card>
+              <CardContent className="py-8 text-center">
+                <div className="animate-pulse text-muted-foreground">
+                  Debate is starting... Waiting for first turn.
+                </div>
+              </CardContent>
+            </Card>
+          )}
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="max-w-7xl mx-auto py-4 sm:py-8 px-4 sm:px-6">
       {/* View Content */}
@@ -199,7 +296,7 @@ export default function DebateArenaPage() {
         <>
           {headerContent}
           <div className="mt-4 sm:mt-6">
-            <DebateStreamView runId={runId} autoStart={true} />
+            <DebateStreamView runId={runId} runStatus={run.status} autoStart={true} />
           </div>
         </>
       )}

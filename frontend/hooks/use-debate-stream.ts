@@ -8,6 +8,7 @@ import type { DebatePhase } from "@/lib/types";
 import {
   getUserFriendlyError,
   getMaxReconnectsError,
+  isPermanentError,
   type FriendlyError,
 } from "@/lib/error-messages";
 
@@ -345,6 +346,19 @@ export function useDebateStream() {
             ...prev,
             isStreaming: false,
             isReconnecting: false,
+          }));
+        } else if (isPermanentError(error)) {
+          // Permanent error (run failed, completed, etc) - don't attempt reconnect
+          console.warn("Stream (permanent):", error.message);
+          if (connectionTimeoutRef.current) {
+            clearTimeout(connectionTimeoutRef.current);
+            connectionTimeoutRef.current = null;
+          }
+          setState((prev) => ({
+            ...prev,
+            isStreaming: false,
+            isReconnecting: false,
+            error: getUserFriendlyError(error),
           }));
         } else {
           // Network error - attempt reconnect

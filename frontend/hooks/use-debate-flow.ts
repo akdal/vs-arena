@@ -11,6 +11,7 @@ import type { DebatePhase, RunDetail } from "@/lib/types";
 import {
   getUserFriendlyError,
   getMaxReconnectsError,
+  isPermanentError,
   type FriendlyError,
 } from "@/lib/error-messages";
 import type {
@@ -487,9 +488,15 @@ export function useDebateFlow({ run, onLayoutChange }: UseDebateFlowOptions) {
               attemptReconnect(currentRunIdRef.current);
               return;
             }
-          } else {
-            console.error("Stream error:", error.message);
+          } else if (isPermanentError(error)) {
+            // Permanent error - don't attempt reconnect, just warn
+            console.warn("Flow stream (permanent):", error.message);
             setError(getUserFriendlyError(error));
+          } else {
+            // Network/transient error - attempt reconnect
+            console.error("Flow stream error:", error.message);
+            attemptReconnect(currentRunIdRef.current!);
+            return;
           }
           setIsStreaming(false);
         }

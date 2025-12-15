@@ -37,6 +37,7 @@ export interface ArenaReplayViewProps {
   run: RunDetail;
   turns: Turn[];
   header: React.ReactNode;
+  isLive?: boolean;  // When true, auto-follows latest turn without playback controls
 }
 
 const PANEL_STORAGE_KEY = "arena-panel-open";
@@ -45,7 +46,7 @@ const PANEL_STORAGE_KEY = "arena-panel-open";
  * ReplayContent component that uses React Flow hooks
  * Must be rendered within FlowProvider context
  */
-function ReplayContent({ run, turns, header }: ArenaReplayViewProps) {
+function ReplayContent({ run, turns, header, isLive = false }: ArenaReplayViewProps) {
   const { fitView, setCenter, getNode } = useReactFlow();
   const prevPhaseRef = useRef<string | null>(null);
   const [isPanelOpen, handlePanelToggle] = usePersistentToggle(PANEL_STORAGE_KEY, true);
@@ -105,6 +106,16 @@ function ReplayContent({ run, turns, header }: ArenaReplayViewProps) {
     }
   }, [currentPhase, getNode, setCenter]);
 
+  // Auto-jump to latest phase when in live mode and turns change
+  useEffect(() => {
+    if (isLive && turns.length > 0) {
+      const lastPhaseIndex = availablePhases.length - 1;
+      if (lastPhaseIndex >= 0 && currentPhaseIndex !== lastPhaseIndex) {
+        goToPhase(lastPhaseIndex);
+      }
+    }
+  }, [isLive, turns.length, availablePhases.length, currentPhaseIndex, goToPhase]);
+
   return (
     <ArenaLayout
       header={header}
@@ -163,9 +174,15 @@ function ReplayContent({ run, turns, header }: ArenaReplayViewProps) {
               />
             </Panel>
             <Panel position="top-left" className="bg-background/95 backdrop-blur rounded-lg border px-3 py-1.5">
-              <Badge variant="outline" className="text-amber-600 border-amber-500">
-                Replay Mode
-              </Badge>
+              {isLive ? (
+                <Badge variant="default" className="bg-green-600 animate-pulse">
+                  Live
+                </Badge>
+              ) : (
+                <Badge variant="outline" className="text-amber-600 border-amber-500">
+                  Replay Mode
+                </Badge>
+              )}
             </Panel>
           </ReactFlow>
         </div>

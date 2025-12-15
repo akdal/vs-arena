@@ -126,7 +126,9 @@ export async function cloneAgent(agentId: string): Promise<Agent> {
  * Get available Ollama models
  */
 export async function getOllamaModels(): Promise<OllamaModel[]> {
-  return fetchAPI<OllamaModel[]>("/ollama/models");
+  // Backend returns { models: [...] }, extract the array
+  const response = await fetchAPI<{ models: OllamaModel[] }>("/ollama/models");
+  return response.models;
 }
 
 /**

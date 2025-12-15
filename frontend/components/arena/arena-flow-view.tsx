@@ -20,6 +20,7 @@ import {
 import "@xyflow/react/dist/style.css";
 import { toast } from "sonner";
 
+import { isPermanentError } from "@/lib/error-messages";
 import { nodeTypes } from "../flow/nodes";
 import { edgeTypes } from "../flow/edges";
 import { useDebateFlow } from "@/hooks/use-debate-flow";
@@ -108,12 +109,13 @@ function FlowContent({
 
   useKeyboardShortcuts(shortcuts);
 
-  // Start streaming on mount if autoStart is true
+  // Start streaming on mount if autoStart is true and run is pending
   useEffect(() => {
-    if (autoStart && run.run_id) {
+    // Only auto-start if run is pending (not already running/completed/failed)
+    if (autoStart && run.run_id && run.status === "pending") {
       startStream(run.run_id);
     }
-  }, [autoStart, run.run_id, startStream]);
+  }, [autoStart, run.run_id, run.status, startStream]);
 
   // Fit view on initial mount
   useEffect(() => {
@@ -148,8 +150,12 @@ function FlowContent({
           onClick: () => startStream(run.run_id),
         } : undefined,
       });
-      // Log original error for debugging
-      console.error("Arena flow error:", error.originalError);
+      // Log original error for debugging (use warn for permanent errors since they're expected)
+      if (isPermanentError(error.originalError)) {
+        console.warn("Arena flow (permanent):", error.originalError);
+      } else {
+        console.error("Arena flow error:", error.originalError);
+      }
     }
   }, [error, startStream, run.run_id]);
 

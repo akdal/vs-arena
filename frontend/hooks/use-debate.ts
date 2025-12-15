@@ -61,13 +61,16 @@ export function useStartDebate() {
 }
 
 /**
- * Fetch turns for a debate run (for replay)
+ * Fetch turns for a debate run (for replay or live watching)
+ * @param runId - The run ID to fetch turns for
+ * @param pollInterval - Polling interval in ms (0 to disable, default 0)
  */
-export function useRunTurns(runId: string | null) {
+export function useRunTurns(runId: string | null, pollInterval: number = 0) {
   return useQuery({
     queryKey: [...debateKeys.runDetail(runId ?? ""), "turns"] as const,
     queryFn: () => getRunTurns(runId!),
     enabled: !!runId,
+    refetchInterval: pollInterval > 0 ? pollInterval : false,
   });
 }
 

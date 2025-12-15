@@ -8,6 +8,7 @@
 import { useEffect, useMemo } from "react";
 import { toast } from "sonner";
 import { useDebateStream } from "@/hooks/use-debate-stream";
+import { isPermanentError } from "@/lib/error-messages";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -21,6 +22,7 @@ const MAX_RECONNECT_ATTEMPTS = 3;
 
 interface DebateStreamViewProps {
   runId: string;
+  runStatus?: string;
   autoStart?: boolean;
 }
 
@@ -45,6 +47,7 @@ interface ParsedVerdict {
 
 export function DebateStreamView({
   runId,
+  runStatus,
   autoStart = true,
 }: DebateStreamViewProps) {
   const {
@@ -61,13 +64,14 @@ export function DebateStreamView({
   } = useDebateStream();
 
   useEffect(() => {
-    if (autoStart && runId) {
+    // Only auto-start if run is pending (not already running/completed/failed)
+    if (autoStart && runId && (!runStatus || runStatus === "pending")) {
       startStream(runId);
     }
     return () => {
       stopStream();
     };
-  }, [runId, autoStart, startStream, stopStream]);
+  }, [runId, runStatus, autoStart, startStream, stopStream]);
 
   // Show toast notification for errors
   useEffect(() => {
@@ -81,8 +85,12 @@ export function DebateStreamView({
           onClick: () => startStream(runId),
         } : undefined,
       });
-      // Log original error for debugging
-      console.error("Debate stream error:", error.originalError);
+      // Log original error for debugging (use warn for permanent errors since they're expected)
+      if (isPermanentError(error.originalError)) {
+        console.warn("Debate stream (permanent):", error.originalError);
+      } else {
+        console.error("Debate stream error:", error.originalError);
+      }
     }
   }, [error, startStream, runId]);
 
