@@ -125,6 +125,7 @@ function FlowContent({
   useEffect(() => {
     if (error) {
       toast.error(error, {
+        id: "arena-flow-error",
         duration: 5000,
       });
     }

@@ -69,6 +69,7 @@ export function AgentEditor({ mode, agent }: AgentEditorProps) {
     const error = createMutation.error || updateMutation.error;
     if (error) {
       toast.error(error.message || "Failed to save agent", {
+        id: "agent-editor-error",
         duration: 5000,
       });
     }

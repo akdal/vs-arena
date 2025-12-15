@@ -40,6 +40,7 @@ export function AgentPreviewPanel({
   useEffect(() => {
     if (error) {
       toast.error(error, {
+        id: "agent-preview-error",
         duration: 5000,
       });
     }

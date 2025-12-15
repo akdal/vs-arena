@@ -68,6 +68,7 @@ export function DebateStreamView({
   useEffect(() => {
     if (error) {
       toast.error(error, {
+        id: "debate-stream-error",
         duration: 5000,
       });
     }
