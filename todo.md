@@ -329,9 +329,25 @@
 - [x] 키보드 단축키
 
 ### 4.4 Documentation
-- [ ] API 문서 (OpenAPI/Swagger)
+- [x] API 문서 (OpenAPI/Swagger)
+  - [x] OpenAPI metadata 향상 (title, description, version, tags, license)
+  - [x] Pydantic Field examples 추가 (모든 스키마)
+  - [x] Endpoint summary/description 추가 (agents, debate, ollama)
 - [ ] 컴포넌트 문서 (Storybook - optional)
-- [ ] 사용자 가이드
+- [x] 사용자 가이드 (docs/USER_GUIDE.md)
+
+### 4.5 Test Enhancement (Phase 4.3 이후 추가 테스트)
+- [x] Frontend Utility Tests
+  - [x] `error-messages.test.ts` - FriendlyError 유틸리티 (37 tests)
+  - [x] `use-keyboard-shortcuts.test.ts` - 키보드 단축키 훅 (34 tests)
+  - [x] `use-persistent-state.test.ts` - localStorage 상태 훅 (20 tests)
+- [x] Frontend Component Tests
+  - [x] `connection-status.test.tsx` - 연결 상태 컴포넌트 (18 tests)
+- [x] Frontend Hook Tests
+  - [x] `use-debate-replay.test.tsx` - 리플레이 훅 (29 tests)
+- [x] Backend Utility Tests
+  - [x] `test_utils.py` - detect_forbidden_phrases 등 (29 tests)
+- **Total**: 167 new tests added (Frontend: 138, Backend: 29)
 
 ---
 
@@ -343,7 +359,7 @@
 | Phase 1: M1 | **Completed** | 100% (Backend + Frontend Agent Module) |
 | Phase 2: M2 | **Completed** | 100% (2.1, 2.2, 2.3, 2.4, 2.5 완료) |
 | Phase 3: M3 | **Completed** | 100% (3.1-3.6 완료) |
-| Phase 4: Polish | **In Progress** | 75% (4.1 Testing, 4.2 Performance, 4.3 UX Polish 완료) |
+| Phase 4: Polish | **Completed** | 100% (4.1-4.5 모두 완료) |
 
 ---
 

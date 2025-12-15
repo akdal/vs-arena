@@ -115,6 +115,46 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
     - Grid layout breakpoint adjustments
     - Touch device compatibility
 
+- **API Documentation**: Comprehensive OpenAPI/Swagger documentation (Phase 4.4)
+  - OpenAPI metadata enhancement:
+    - API title, description, version 1.0.0
+    - Tag descriptions for agents, debate, ollama
+    - MIT license information
+    - SSE event types documentation
+  - Pydantic Field examples:
+    - AgentBase, AgentUpdate, AgentResponse schemas
+    - PreviewRequest, PreviewResponse schemas
+    - RunCreate, RunResponse, RunDetailResponse schemas
+    - TurnResponse schema
+    - DebateStartRequest, DebateStartResponse schemas
+  - Endpoint summaries and descriptions:
+    - 7 agents endpoints with full documentation
+    - 9 debate endpoints with full documentation
+    - 2 ollama endpoints with response format docs
+  - User Guide (docs/USER_GUIDE.md):
+    - Quick Start guide
+    - Agent Management documentation
+    - Running Debates guide
+    - Debate Arena features
+    - Swap Test (Bias Detection) explanation
+    - API Reference with endpoint table
+    - Keyboard Shortcuts
+    - Troubleshooting section
+
+- **Test Enhancement**: Expanded test coverage for Phase 3-4 features (Phase 4.5)
+  - Frontend utility tests:
+    - `error-messages.test.ts`: getUserFriendlyError, getReconnectingError (37 tests)
+    - `use-keyboard-shortcuts.test.ts`: Key handling, modifiers, normalization (34 tests)
+    - `use-persistent-state.test.ts`: localStorage persistence, toggle (20 tests)
+  - Frontend component tests:
+    - `connection-status.test.tsx`: ConnectionStatus, StreamingIndicator (18 tests)
+  - Frontend hook tests:
+    - `use-debate-replay.test.tsx`: Playback state, controls, navigation (29 tests)
+  - Backend utility tests:
+    - `test_utils.py`: build_system_prompt, get_agent_for_phase, detect_forbidden_phrases, parse_json_scores (29 tests)
+  - Test total: 167 new tests (Frontend: 138, Backend: 29)
+  - Grand total: 186 frontend tests, 105 backend tests
+
 - **Testing Infrastructure**: Comprehensive test suite (Phase 4.1)
   - Backend tests (pytest + pytest-asyncio):
     - `pytest.ini`: Configuration with asyncio_mode=auto
@@ -1288,6 +1328,150 @@ BP Lite 토론 규칙 위반 감지 시스템 구현 - Forbidden Phrase 감지 �
 - `/frontend/components/arena/arena-flow-view.tsx` - 키보드 단축키 및 연결 상태 통합
 
 **Commit**: be6777b Phase 4.3: UX Polish complete
+
+---
+
+### 2025-12-15: Phase 4.5 Test Enhancement 완료
+
+**목표 (Goal)**:
+Phase 3-4 기능에 대한 테스트 커버리지 확장 - 유틸리티, 컴포넌트, 훅 테스트 167개 추가
+
+**구현 내용 (Implementation)**:
+
+1. **Frontend 유틸리티 테스트 (91 tests)**:
+   - `error-messages.test.ts` (37 tests):
+     * `getUserFriendlyError()`: 네트워크 에러, 타임아웃, 서버 에러 변환
+     * `getReconnectingError()`: 재연결 메시지 생성
+     * `getMaxReconnectsError()`: 최대 재연결 초과 메시지
+   - `use-keyboard-shortcuts.test.tsx` (34 tests):
+     * 기본 키 입력 처리
+     * 수정자 키 조합 (ctrl, shift, alt, meta)
+     * 키 정규화 (Key vs Code)
+     * `formatShortcut()` 표시 형식
+   - `use-persistent-state.test.tsx` (20 tests):
+     * localStorage 읽기/쓰기
+     * 함수형 상태 업데이트
+     * `usePersistentToggle` 훅
+     * SSR 안전성 검증
+
+2. **Frontend 컴포넌트 테스트 (18 tests)**:
+   - `connection-status.test.tsx` (18 tests):
+     * `ConnectionStatus` 컴포넌트: 연결 상태별 렌더링
+     * `StreamingIndicator` 컴포넌트: 스트리밍/대기 상태
+     * `formatPhaseName()` 헬퍼: phase 이름 변환
+
+3. **Frontend 훅 테스트 (29 tests)**:
+   - `use-debate-replay.test.tsx` (29 tests):
+     * 재생 상태 관리 (playing, paused)
+     * 속도 제어 (0.5x, 1x, 2x)
+     * Phase 네비게이션 (previous, next, goToPhase)
+     * 문자 단위 스트리밍 시뮬레이션
+
+4. **Backend 유틸리티 테스트 (29 tests)**:
+   - `test_utils.py` (29 tests):
+     * `build_system_prompt()`: 시스템 프롬프트 생성 검증
+     * `get_agent_for_phase()`: phase별 에이전트 반환 로직
+     * `detect_forbidden_phrases()`: 금칙어 감지 (대소문자 무시, 컨텍스트 추출)
+     * `parse_json_scores()`: JSON 점수 파싱 (3-tier fallback)
+
+5. **버그 수정**:
+   - `backend/tests/api/test_debate_api.py`: TestDeleteRun 패치 경로 수정
+   - `backend/tests/services/test_ollama.py`: TestStreamOllama 모킹 설정 수정 (3 tests)
+   - `frontend/lib/api-client.ts`: `getOllamaModels()` 응답 추출 수정
+
+**결과 (Result)**:
+- **신규 테스트**: 167개 추가 (Frontend: 138, Backend: 29)
+- **총 테스트**: Frontend 186개, Backend 105개 - 모두 통과
+- Phase 3-4 기능에 대한 테스트 커버리지 대폭 향상
+- 기존 테스트의 fragile 패턴 개선
+
+**관련 파일 (Related Files)**:
+- `/frontend/tests/lib/error-messages.test.ts` - FriendlyError 테스트 (신규)
+- `/frontend/tests/hooks/use-keyboard-shortcuts.test.tsx` - 키보드 단축키 테스트 (신규)
+- `/frontend/tests/hooks/use-persistent-state.test.tsx` - 영속 상태 테스트 (신규)
+- `/frontend/tests/components/ui/connection-status.test.tsx` - 연결 상태 테스트 (신규)
+- `/frontend/tests/hooks/use-debate-replay.test.tsx` - 리플레이 훅 테스트 (신규)
+- `/backend/tests/services/test_utils.py` - 유틸리티 테스트 (신규)
+- `/backend/tests/api/test_debate_api.py` - 패치 경로 수정
+- `/backend/tests/services/test_ollama.py` - 모킹 설정 수정
+- `/frontend/lib/api-client.ts` - getOllamaModels() 수정
+
+---
+
+### 2025-12-15: Phase 4.4 API Documentation 완료
+
+**목표 (Goal)**:
+API 문서화 및 사용자 가이드 작성 - OpenAPI/Swagger 향상, Pydantic 스키마 예제 추가, 사용자 가이드 작성
+
+**구현 내용 (Implementation)**:
+
+1. **OpenAPI Metadata 향상** (backend/app/main.py):
+   - API 제목 및 상세 설명 추가
+   - 주요 기능 목록 (Agent Management, Debate Execution, SSE Streaming, Judging System)
+   - SSE 이벤트 타입 문서화 (phase_start, token, phase_end, score, verdict, run_complete, error, heartbeat)
+   - openapi_tags 추가 (agents, debate, ollama 각 태그별 설명)
+   - 버전 1.0.0으로 업데이트
+   - MIT 라이선스 정보 추가
+
+2. **Pydantic Field Examples** (backend/app/models/schemas.py):
+   - AgentBase: name, model, persona_json, params_json 예제 추가
+   - AgentUpdate: 선택적 필드 예제 추가
+   - AgentResponse: agent_id, created_at, updated_at 예제 추가
+   - PreviewRequest: topic, position, agent_id/config 예제 추가
+   - PreviewResponse: content, model 예제 추가
+   - RunCreate: topic, positions, agent_ids, config, rubric 예제 추가
+   - RunResponse: status, result_json, finished_at 예제 추가
+   - RunDetailResponse: agent_a, agent_b, judge 예제 추가
+   - TurnResponse: phase, role, content, targets, metadata_json 예제 추가
+   - DebateStartRequest, DebateStartResponse: 전체 필드 예제 추가
+
+3. **Endpoint Summaries** (backend/app/api/endpoints/):
+   - agents.py (7 endpoints):
+     * GET / - List all agents (에이전트 목록 조회)
+     * POST / - Create a new agent (새 에이전트 생성)
+     * GET /{id} - Get agent by ID (ID로 에이전트 조회)
+     * PUT /{id} - Update an agent (에이전트 수정)
+     * DELETE /{id} - Delete an agent (에이전트 삭제)
+     * POST /{id}/clone - Clone an agent (에이전트 복제)
+     * POST /preview - Preview agent response (에이전트 응답 미리보기)
+   - debate.py (9 endpoints):
+     * POST /start - Start a new debate (새 토론 시작)
+     * GET /stream/{run_id} - Stream debate events (토론 이벤트 스트리밍)
+     * GET /runs - List all runs (모든 Run 조회)
+     * GET /runs/{id} - Get run details (Run 상세 조회)
+     * GET /runs/{id}/turns - Get turns for replay (리플레이용 Turn 조회)
+     * DELETE /runs/{id} - Delete a run (Run 삭제)
+     * POST /runs/{id}/swap - Create swap test (Swap Test 생성)
+     * GET /runs/{id}/compare/{swap_id} - Compare runs (Run 비교)
+   - ollama.py (2 endpoints):
+     * GET /models - Get available Ollama models (사용 가능한 모델 조회)
+     * GET /status - Check Ollama server status (서버 상태 확인)
+
+4. **User Guide** (docs/USER_GUIDE.md):
+   - Quick Start 가이드 (설치 및 실행 방법)
+   - Agent Management (생성, 수정, 삭제, 복제)
+   - Running Debates (토론 설정 및 실행)
+   - Debate Arena (Live View, Replay Mode)
+   - Swap Test (Position Bias 감지)
+   - API Reference (엔드포인트 테이블)
+   - Keyboard Shortcuts (Space, Arrow, Number keys)
+   - Troubleshooting (일반적인 문제 해결)
+
+**결과 (Result)**:
+- Phase 4.4 완료로 Phase 4 (Polish) 100% 달성
+- Backend 테스트: 105개 모두 통과
+- OpenAPI/Swagger UI에서 완전한 API 문서 확인 가능
+- 모든 스키마에 예제 값 제공
+- 사용자 가이드로 신규 사용자 온보딩 용이
+- Storybook은 optional로 유지 (미구현)
+
+**관련 파일 (Related Files)**:
+- `/backend/app/main.py` - OpenAPI metadata 향상
+- `/backend/app/models/schemas.py` - Pydantic Field examples 추가
+- `/backend/app/api/endpoints/agents.py` - Endpoint summaries 추가
+- `/backend/app/api/endpoints/debate.py` - Endpoint summaries 추가
+- `/backend/app/api/endpoints/ollama.py` - Endpoint summaries 추가
+- `/docs/USER_GUIDE.md` - 사용자 가이드 (신규)
 
 ---
 

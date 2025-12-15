@@ -155,6 +155,157 @@ npm run lint
 npm run build
 ```
 
+## Service Management
+
+Guide for running services in the background and managing them.
+
+### Database (Docker)
+- **Start**: `docker-compose up -d`
+- **Check Status**: `docker-compose ps` (Status should be "Up")
+- **Stop**: `docker-compose stop`
+- **Logs**: `docker-compose logs -f`
+
+### Backend (FastAPI)
+- **Start (Background)**:
+  ```bash
+  cd backend
+  nohup uvicorn app.main:app --reload --port 8000 > backend.log 2>&1 &
+  ```
+- **Check Status**: 
+  - `ps aux | grep uvicorn`
+  - `lsof -i :8000` (Should see Python process listening)
+  - `curl http://localhost:8000/docs`
+- **Stop**: `pkill -f uvicorn` or `kill $(lsof -t -i:8000)` (If error "not enough arguments", server is already stopped)
+- **Logs**: `tail -f backend/backend.log`
+
+### Frontend (Next.js)
+- **Start (Background)**:
+  ```bash
+  cd frontend
+  nohup npm run dev > frontend.log 2>&1 &
+  ```
+- **Check Status**: 
+  - `ps aux | grep "next-server"` or `ps aux | grep "npm run dev"`
+  - `lsof -i :3000`
+- **Stop**: `kill $(lsof -t -i:3000)` (If error "not enough arguments", server is already stopped)
+- **Logs**: `tail -f frontend/frontend.log`
+
+### Ollama
+- **Start (Background)**: `nohup ollama serve > ollama.log 2>&1 &`
+- **Check Status**: `curl http://localhost:11434` or `ps aux | grep ollama`
+- **Stop**: `pkill -f "ollama serve"`
+
+## Testing
+
+### Backend Tests
+
+```bash
+cd backend
+
+# Run all tests
+pytest
+
+# Run with verbose output
+pytest -v
+
+# Run specific test file
+pytest tests/services/test_debate.py
+
+# Run with coverage report
+pytest --cov=app --cov-report=html
+
+# Run async tests (automatically handled by pytest-asyncio)
+pytest tests/api/
+```
+
+**Test Structure:**
+```
+backend/tests/
+├── services/          # Service layer tests
+│   ├── test_debate.py      # Debate workflow tests
+│   ├── test_agents.py      # Agent service tests
+│   └── test_ollama.py      # Ollama integration tests
+├── api/               # API endpoint tests
+│   ├── test_agents_api.py  # Agent CRUD API tests
+│   └── test_runs_api.py    # Runs/Debate API tests
+└── conftest.py        # Pytest fixtures
+```
+
+### Frontend Tests
+
+```bash
+cd frontend
+
+# Run tests in watch mode (development)
+npm run test
+
+# Run all tests once (CI)
+npm run test:run
+
+# Run with coverage report
+npm run test:coverage
+
+# Run specific test file
+npm run test -- use-debate-flow.test.tsx
+```
+
+**Test Structure:**
+```
+frontend/tests/
+├── components/        # Component tests
+│   ├── arena/             # Arena view components
+│   └── ui/                # UI component tests
+├── hooks/             # React hook tests
+│   ├── use-debate-flow.test.tsx
+│   └── use-debate-replay.test.tsx
+├── lib/               # Utility function tests
+│   └── error-messages.test.ts
+└── setup.ts           # Vitest configuration
+```
+
+**Testing Libraries:**
+- **Vitest** - Test runner (Jest-compatible)
+- **React Testing Library** - Component testing
+- **@testing-library/react-hooks** - Hook testing via `renderHook`
+- **MSW (Mock Service Worker)** - API mocking
+
+### Test Patterns
+
+**Frontend Hook Test Example:**
+```typescript
+import { renderHook, waitFor, act } from '@testing-library/react';
+import { describe, it, expect, vi, beforeEach } from 'vitest';
+
+describe('useMyHook', () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
+  it('should return initial state', () => {
+    const { result } = renderHook(() => useMyHook());
+    expect(result.current.value).toBe(initialValue);
+  });
+});
+```
+
+**Backend Async Test Example:**
+```python
+import pytest
+from httpx import AsyncClient
+
+@pytest.mark.asyncio
+async def test_create_agent(async_client: AsyncClient):
+    response = await async_client.post("/api/agents", json={...})
+    assert response.status_code == 200
+```
+
+### Running All Tests
+
+```bash
+# From project root
+cd backend && pytest && cd ../frontend && npm run test:run
+```
+
 ## Database
 
 ### Access PostgreSQL
