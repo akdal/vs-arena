@@ -38,7 +38,17 @@ export function SwapComparisonView({
     );
   }
 
-  if (error || !data) return null;
+  if (error) {
+    return (
+      <Card className="border-destructive">
+        <CardContent className="py-4">
+          <p className="text-sm text-destructive">Failed to load comparison data</p>
+        </CardContent>
+      </Card>
+    );
+  }
+
+  if (!data) return null;
 
   const biasType = data.analysis.bias_type;
   const hasBias = biasType === "position";

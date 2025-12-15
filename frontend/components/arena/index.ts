@@ -13,3 +13,5 @@ export * from "./verdict-panel";
 export * from "./replay-controls";
 export * from "./replay-timeline";
 export * from "./arena-replay-view";
+export * from "./swap-test-button";
+export * from "./swap-comparison-view";

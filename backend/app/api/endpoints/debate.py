@@ -278,6 +278,14 @@ def _analyze_position_bias(original: dict, swapped: dict) -> dict:
     orig_winner = orig_result.get("winner")  # "A", "B", or "DRAW"
     swap_winner = swap_result.get("winner")
 
+    # Handle missing winner data
+    if orig_winner is None or swap_winner is None:
+        return {
+            "bias_type": "inconclusive",
+            "biased_toward": None,
+            "description": "One or both debates have no winner data."
+        }
+
     # Handle DRAW cases
     if orig_winner == "DRAW" or swap_winner == "DRAW":
         return {

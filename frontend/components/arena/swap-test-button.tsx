@@ -40,6 +40,7 @@ export function SwapTestButton({ runId, isCompleted }: SwapTestButtonProps) {
       disabled={swapMutation.isPending}
       variant="outline"
       size="sm"
+      aria-label="Create swap test to detect position bias"
     >
       <ArrowLeftRight className="mr-2 h-4 w-4" />
       {swapMutation.isPending ? "Creating..." : "Swap Test"}
