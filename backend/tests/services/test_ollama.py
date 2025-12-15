@@ -117,7 +117,8 @@ class TestStreamOllama:
             mock_stream_context = AsyncMock()
             mock_stream_context.__aenter__.return_value = mock_response
             mock_stream_context.__aexit__.return_value = None
-            mock_client.stream.return_value = mock_stream_context
+            # stream() is a regular method returning async context manager, not async method
+            mock_client.stream = MagicMock(return_value=mock_stream_context)
             MockClient.return_value.__aenter__.return_value = mock_client
 
             chunks = []
@@ -142,7 +143,8 @@ class TestStreamOllama:
             mock_stream_context = AsyncMock()
             mock_stream_context.__aenter__.return_value = mock_response
             mock_stream_context.__aexit__.return_value = None
-            mock_client.stream.return_value = mock_stream_context
+            # stream() is a regular method returning async context manager, not async method
+            mock_client.stream = MagicMock(return_value=mock_stream_context)
             MockClient.return_value.__aenter__.return_value = mock_client
 
             chunks = []
@@ -168,7 +170,8 @@ class TestStreamOllama:
             mock_stream_context = AsyncMock()
             mock_stream_context.__aenter__.return_value = mock_response
             mock_stream_context.__aexit__.return_value = None
-            mock_client.stream.return_value = mock_stream_context
+            # stream() is a regular method returning async context manager, not async method
+            mock_client.stream = MagicMock(return_value=mock_stream_context)
             MockClient.return_value.__aenter__.return_value = mock_client
 
             chunks = []

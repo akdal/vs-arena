@@ -250,7 +250,8 @@ class TestDeleteRun:
     @pytest.mark.asyncio
     async def test_deletes_run_returns_204(self):
         """DELETE /api/debate/runs/{id} should return 204 on success."""
-        with patch('app.api.endpoints.debate.delete_run',
+        # Patch run_crud.delete_run since debate.py imports it as module
+        with patch('app.api.endpoints.debate.run_crud.delete_run',
                    new_callable=AsyncMock, return_value=True):
             transport = ASGITransport(app=app)
             async with AsyncClient(transport=transport, base_url="http://test") as client:
@@ -261,7 +262,8 @@ class TestDeleteRun:
     @pytest.mark.asyncio
     async def test_returns_404_when_not_found(self):
         """DELETE /api/debate/runs/{id} should return 404 for unknown ID."""
-        with patch('app.api.endpoints.debate.delete_run',
+        # Patch run_crud.delete_run since debate.py imports it as module
+        with patch('app.api.endpoints.debate.run_crud.delete_run',
                    new_callable=AsyncMock, return_value=False):
             transport = ASGITransport(app=app)
             async with AsyncClient(transport=transport, base_url="http://test") as client:
