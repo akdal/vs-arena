@@ -323,10 +323,10 @@
   - [x] Incremental layout O(1) vs O(n^2) dagre
 
 ### 4.3 UX Polish
-- [ ] 로딩 상태 표시
-- [ ] 에러 메시지 개선
-- [ ] 반응형 레이아웃
-- [ ] 키보드 단축키
+- [x] 로딩 상태 표시
+- [x] 에러 메시지 개선
+- [x] 반응형 레이아웃
+- [x] 키보드 단축키
 
 ### 4.4 Documentation
 - [ ] API 문서 (OpenAPI/Swagger)
@@ -343,7 +343,7 @@
 | Phase 1: M1 | **Completed** | 100% (Backend + Frontend Agent Module) |
 | Phase 2: M2 | **Completed** | 100% (2.1, 2.2, 2.3, 2.4, 2.5 완료) |
 | Phase 3: M3 | **Completed** | 100% (3.1-3.6 완료) |
-| Phase 4: Polish | **In Progress** | 50% (4.1 Testing, 4.2 Performance 완료) |
+| Phase 4: Polish | **In Progress** | 75% (4.1 Testing, 4.2 Performance, 4.3 UX Polish 완료) |
 
 ---
 

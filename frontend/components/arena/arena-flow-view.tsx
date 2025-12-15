@@ -8,7 +8,7 @@
  * to use useReactFlow hooks. The parent component is responsible for providing this context.
  */
 
-import { useState, useEffect, useRef, useCallback, useMemo } from "react";
+import { useState, useEffect, useRef, useMemo } from "react";
 import {
   ReactFlow,
   Background,
@@ -24,6 +24,7 @@ import { nodeTypes } from "../flow/nodes";
 import { edgeTypes } from "../flow/edges";
 import { useDebateFlow } from "@/hooks/use-debate-flow";
 import { useKeyboardShortcuts, formatShortcut, type ShortcutConfig } from "@/hooks/use-keyboard-shortcuts";
+import { usePersistentToggle } from "@/hooks/use-persistent-state";
 import type { RunDetail } from "@/lib/types";
 import { Badge } from "@/components/ui/badge";
 import { TurnIndicator } from "./turn-indicator";
@@ -37,7 +38,7 @@ export interface ArenaFlowViewProps {
   header: React.ReactNode;
 }
 
-const STORAGE_KEY = "arena-panel-open";
+const PANEL_STORAGE_KEY = "arena-panel-open";
 
 /**
  * FlowContent component that uses React Flow hooks
@@ -50,32 +51,8 @@ function FlowContent({
 }: ArenaFlowViewProps) {
   const { fitView, setCenter, getNode } = useReactFlow();
   const prevPhaseRef = useRef<string | null>(null);
-  const [isPanelOpen, setIsPanelOpen] = useState(true);
+  const [isPanelOpen, handlePanelToggle] = usePersistentToggle(PANEL_STORAGE_KEY, true);
   const [showShortcuts, setShowShortcuts] = useState(false);
-
-  // Load panel state from localStorage with error handling
-  useEffect(() => {
-    try {
-      const savedState = localStorage.getItem(STORAGE_KEY);
-      if (savedState !== null) {
-        setIsPanelOpen(savedState === "true");
-      }
-    } catch {
-      // localStorage unavailable (private browsing, quota exceeded, etc.)
-      // Use default state (panel open)
-    }
-  }, []);
-
-  // Save panel state to localStorage with error handling
-  const handlePanelToggle = useCallback(() => {
-    const newState = !isPanelOpen;
-    setIsPanelOpen(newState);
-    try {
-      localStorage.setItem(STORAGE_KEY, String(newState));
-    } catch {
-      // localStorage unavailable, silently ignore
-    }
-  }, [isPanelOpen]);
 
   const {
     nodes,

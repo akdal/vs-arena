@@ -117,6 +117,9 @@ function normalizeKey(key: string): string {
       return "space";
     case "esc":
       return "escape";
+    case "enter":
+    case "return":
+      return "enter";
     case "arrowup":
       return "up";
     case "arrowdown":
@@ -125,6 +128,9 @@ function normalizeKey(key: string): string {
       return "left";
     case "arrowright":
       return "right";
+    case "backspace":
+    case "delete":
+      return normalized; // Keep as-is but ensure lowercase
     default:
       return normalized;
   }
@@ -154,7 +160,21 @@ export function formatShortcut(shortcut: ShortcutConfig, useMacSymbols = true): 
       keyDisplay = "Space";
       break;
     case "escape":
+    case "esc":
       keyDisplay = "Esc";
+      break;
+    case "enter":
+    case "return":
+      keyDisplay = isMac && useMacSymbols ? "↩" : "Enter";
+      break;
+    case "backspace":
+      keyDisplay = isMac && useMacSymbols ? "⌫" : "Backspace";
+      break;
+    case "delete":
+      keyDisplay = isMac && useMacSymbols ? "⌦" : "Delete";
+      break;
+    case "tab":
+      keyDisplay = isMac && useMacSymbols ? "⇥" : "Tab";
       break;
     case "arrowup":
     case "up":

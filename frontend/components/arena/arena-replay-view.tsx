@@ -8,7 +8,7 @@
  * to use useReactFlow hooks. The parent component is responsible for providing this context.
  */
 
-import { useState, useEffect, useRef, useCallback } from "react";
+import { useState, useEffect, useRef } from "react";
 import {
   ReactFlow,
   Background,
@@ -22,6 +22,7 @@ import "@xyflow/react/dist/style.css";
 import { nodeTypes } from "../flow/nodes";
 import { edgeTypes } from "../flow/edges";
 import { useDebateReplay } from "@/hooks/use-debate-replay";
+import { usePersistentToggle } from "@/hooks/use-persistent-state";
 import type { RunDetail, Turn } from "@/lib/types";
 import { Badge } from "@/components/ui/badge";
 import { TurnIndicator } from "./turn-indicator";
@@ -38,7 +39,7 @@ export interface ArenaReplayViewProps {
   header: React.ReactNode;
 }
 
-const STORAGE_KEY = "arena-panel-open";
+const PANEL_STORAGE_KEY = "arena-panel-open";
 
 /**
  * ReplayContent component that uses React Flow hooks
@@ -47,30 +48,7 @@ const STORAGE_KEY = "arena-panel-open";
 function ReplayContent({ run, turns, header }: ArenaReplayViewProps) {
   const { fitView, setCenter, getNode } = useReactFlow();
   const prevPhaseRef = useRef<string | null>(null);
-  const [isPanelOpen, setIsPanelOpen] = useState(true);
-
-  // Load panel state from localStorage with error handling
-  useEffect(() => {
-    try {
-      const savedState = localStorage.getItem(STORAGE_KEY);
-      if (savedState !== null) {
-        setIsPanelOpen(savedState === "true");
-      }
-    } catch {
-      // localStorage unavailable
-    }
-  }, []);
-
-  // Save panel state to localStorage with error handling
-  const handlePanelToggle = useCallback(() => {
-    const newState = !isPanelOpen;
-    setIsPanelOpen(newState);
-    try {
-      localStorage.setItem(STORAGE_KEY, String(newState));
-    } catch {
-      // localStorage unavailable
-    }
-  }, [isPanelOpen]);
+  const [isPanelOpen, handlePanelToggle] = usePersistentToggle(PANEL_STORAGE_KEY, true);
 
   const {
     nodes,

@@ -67,6 +67,19 @@ export function ConnectionStatus({
 
 /**
  * Streaming indicator for active data flow
+ *
+ * Shows a pulsing indicator when streaming is active, with optional phase name.
+ * Exported for use in views that need to show streaming state separately from
+ * connection status (e.g., text view, replay controls).
+ *
+ * @example
+ * ```tsx
+ * <StreamingIndicator
+ *   isStreaming={isStreaming}
+ *   currentPhase={currentPhase}
+ *   className="fixed bottom-4 right-4"
+ * />
+ * ```
  */
 interface StreamingIndicatorProps {
   /** Whether streaming is active */

@@ -59,6 +59,11 @@ const ERROR_MESSAGES: Record<string, ErrorMapping> = {
     description: "Could not connect to Ollama. Please ensure Ollama is running locally.",
     action: "retry",
   },
+  BAD_REQUEST: {
+    title: "Invalid request",
+    description: "The request was invalid. Please check your input and try again.",
+    action: "none",
+  },
   NOT_FOUND: {
     title: "Not found",
     description: "The requested resource could not be found.",
@@ -86,6 +91,12 @@ const ERROR_MESSAGES: Record<string, ErrorMapping> = {
  */
 export function getUserFriendlyError(error: string | Error): FriendlyError {
   const errorString = error instanceof Error ? error.message : error;
+
+  // Handle empty or whitespace-only error strings
+  if (!errorString || errorString.trim() === "") {
+    return { ...ERROR_MESSAGES.DEFAULT, originalError: "Unknown error (no message provided)" };
+  }
+
   const lowerError = errorString.toLowerCase();
 
   // Match against known patterns
@@ -121,6 +132,10 @@ export function getUserFriendlyError(error: string | Error): FriendlyError {
     return { ...ERROR_MESSAGES.OLLAMA_ERROR, originalError: errorString };
   }
 
+  if (lowerError.includes("400") || lowerError.includes("bad request")) {
+    return { ...ERROR_MESSAGES.BAD_REQUEST, originalError: errorString };
+  }
+
   if (lowerError.includes("404") || lowerError.includes("not found")) {
     return { ...ERROR_MESSAGES.NOT_FOUND, originalError: errorString };
   }
@@ -137,6 +152,7 @@ export function getUserFriendlyError(error: string | Error): FriendlyError {
   const httpMatch = errorString.match(/HTTP (\d{3})/i);
   if (httpMatch) {
     const status = parseInt(httpMatch[1], 10);
+    if (status === 400) return { ...ERROR_MESSAGES.BAD_REQUEST, originalError: errorString };
     if (status === 404) return { ...ERROR_MESSAGES.NOT_FOUND, originalError: errorString };
     if (status === 401 || status === 403) return { ...ERROR_MESSAGES.UNAUTHORIZED, originalError: errorString };
     if (status >= 500) return { ...ERROR_MESSAGES.SERVER_ERROR, originalError: errorString };
