@@ -92,9 +92,7 @@ export function AgentDetailDrawer({
             <Link href={`/agent/${agent.agent_id}/edit`}>Edit Agent</Link>
           </Button>
           <Button variant="outline" asChild>
-            <Link href={`/debate/new?agentA=${agent.agent_id}`}>
-              Use in Debate
-            </Link>
+            <Link href="/debate">Use in Debate</Link>
           </Button>
         </div>
       </SheetContent>

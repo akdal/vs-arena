@@ -17,10 +17,20 @@ interface AgentGalleryCardProps {
 export function AgentGalleryCard({ agent, onClick }: AgentGalleryCardProps) {
   const persona = agent.persona_json as Record<string, unknown>;
 
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === "Enter" || e.key === " ") {
+      e.preventDefault();
+      onClick();
+    }
+  };
+
   return (
     <Card
-      className="cursor-pointer hover:shadow-lg hover:border-primary/50 transition-all"
+      className="cursor-pointer hover:shadow-lg hover:border-primary/50 transition-all focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
       onClick={onClick}
+      onKeyDown={handleKeyDown}
+      tabIndex={0}
+      role="button"
     >
       <CardHeader className="pb-2">
         <div className="flex items-center justify-between">
