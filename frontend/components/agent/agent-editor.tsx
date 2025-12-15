@@ -7,6 +7,7 @@
 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
+import { toast } from "sonner";
 import type { Agent, AgentCreate } from "@/lib/types";
 import { useCreateAgent, useUpdateAgent } from "@/hooks/use-agents";
 import { ModelSelector } from "./model-selector";
@@ -62,6 +63,16 @@ export function AgentEditor({ mode, agent }: AgentEditorProps) {
       setParamsJson(agent.params_json);
     }
   }, [agent]);
+
+  // Show toast notification for errors
+  useEffect(() => {
+    const error = createMutation.error || updateMutation.error;
+    if (error) {
+      toast.error(error.message || "Failed to save agent", {
+        duration: 5000,
+      });
+    }
+  }, [createMutation.error, updateMutation.error]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();

@@ -35,6 +35,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Type definitions:
     - ReplaySpeed type added to lib/types.ts
 
+- **Error Handling UI**: Toast notification system for user-facing errors (Phase 3.3)
+  - Sonner toast library integration
+  - Global Toaster component in root layout (top-right, richColors)
+  - Error toast notifications in key components:
+    - DebateStreamView: SSE streaming errors
+    - ArenaFlowView: Real-time flow streaming errors
+    - AgentPreviewPanel: Preview generation errors
+    - AgentEditor: Create/Update mutation errors
+  - 5-second auto-dismiss duration for all error toasts
+  - Inline error displays kept as backup
+
 - **React Flow Visualization**: Complete graph-based debate visualization (Phase 2.1)
   - Flow types and TypeScript definitions
   - Custom node types:
@@ -633,6 +644,59 @@ Judging System Frontend 구현 - 점수 카드, 판정 패널, SSE 이벤트 처
 **Commits**:
 - `2ec4701` Phase 2.5: Judging System Frontend complete
 - `ad64c1c` fix: Remove unused PHASE_LABELS import from score-card
+
+---
+
+### 2025-12-15: Phase 3.3 Error Handling UI 완료
+
+**목표 (Goal)**:
+Toast notification 시스템 구현 - 사용자에게 명확한 에러 알림 제공
+
+**구현 내용 (Implementation)**:
+
+1. **Sonner 라이브러리 통합**:
+   - sonner 패키지 설치 (`npm install sonner`)
+   - shadcn/ui 권장 toast 라이브러리
+   - 자동 닫힘, 스택형 알림, 닫기 가능한 UI
+   - richColors 테마 적용
+
+2. **Root Layout 설정** (app/layout.tsx):
+   - Toaster 컴포넌트 추가
+   - 위치: top-right
+   - richColors prop으로 색상 코딩
+
+3. **Toast Error Hooks**:
+   - DebateStreamView (debate-stream-view.tsx):
+     - SSE 스트리밍 에러 시 toast 표시
+     - 기존 인라인 에러 표시 유지
+   - ArenaFlowView (arena-flow-view.tsx):
+     - 실시간 Flow 스트리밍 에러 시 toast 표시
+     - Panel의 작은 텍스트보다 더 눈에 띄는 알림
+   - AgentPreviewPanel (agent-preview-panel.tsx):
+     - Preview 생성 실패 시 toast 표시
+   - AgentEditor (agent-editor.tsx):
+     - Create/Update mutation 실패 시 toast 표시
+     - createMutation.error 및 updateMutation.error 모니터링
+
+4. **일관된 에러 처리 패턴**:
+   - 모든 컴포넌트에서 useEffect로 error 상태 감지
+   - toast.error() 호출 시 5초 duration 설정
+   - 인라인 에러 표시는 백업으로 유지
+
+**결과 (Result)**:
+- Phase 3.3 완료로 Phase 3 (M3) 42% 달성
+- 모든 주요 컴포넌트에서 에러 발생 시 눈에 띄는 toast 알림 표시
+- 사용자가 에러를 놓치지 않도록 개선
+- 닫기 가능한 알림으로 사용자 경험 향상
+- TypeScript 빌드 성공
+
+**관련 파일 (Related Files)**:
+- `/frontend/app/layout.tsx` - Toaster 컴포넌트 추가
+- `/frontend/components/debate/debate-stream-view.tsx` - SSE 에러 toast
+- `/frontend/components/arena/arena-flow-view.tsx` - Flow 에러 toast
+- `/frontend/components/agent/agent-preview-panel.tsx` - Preview 에러 toast
+- `/frontend/components/agent/agent-editor.tsx` - CRUD 에러 toast
+- `/frontend/package.json` - sonner 의존성 추가
 
 ---
 

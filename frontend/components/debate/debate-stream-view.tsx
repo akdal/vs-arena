@@ -6,6 +6,7 @@
  */
 
 import { useEffect, useMemo } from "react";
+import { toast } from "sonner";
 import { useDebateStream } from "@/hooks/use-debate-stream";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -62,6 +63,15 @@ export function DebateStreamView({
       stopStream();
     };
   }, [runId, autoStart, startStream, stopStream]);
+
+  // Show toast notification for errors
+  useEffect(() => {
+    if (error) {
+      toast.error(error, {
+        duration: 5000,
+      });
+    }
+  }, [error]);
 
   // Parse scores into structured format
   const parsedScores = useMemo((): ParsedScores => {

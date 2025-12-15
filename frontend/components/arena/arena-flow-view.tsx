@@ -18,6 +18,7 @@ import {
   useReactFlow,
 } from "@xyflow/react";
 import "@xyflow/react/dist/style.css";
+import { toast } from "sonner";
 
 import { nodeTypes } from "../flow/nodes";
 import { edgeTypes } from "../flow/edges";
@@ -119,6 +120,15 @@ function FlowContent({
       }, 100);
     }
   }, [currentPhase, getNode, setCenter]);
+
+  // Show toast notification for errors
+  useEffect(() => {
+    if (error) {
+      toast.error(error, {
+        duration: 5000,
+      });
+    }
+  }, [error]);
 
   const formatPhase = (phase: string | null) => {
     if (!phase) return "Waiting...";

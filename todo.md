@@ -276,7 +276,7 @@
 - [x] LLM 타임아웃 처리
 - [x] 재시도 로직 (exponential backoff)
 - [x] Run 실패 상태 관리
-- [ ] 사용자 알림 UI
+- [x] 사용자 알림 UI (Sonner toast notifications)
 
 ### 3.4 Character Showcase
 - [ ] 라우팅 설정 (`/agent/showcase`)
@@ -334,7 +334,7 @@
 | Phase 0: Setup | **Completed** | 95% |
 | Phase 1: M1 | **Completed** | 100% (Backend + Frontend Agent Module) |
 | Phase 2: M2 | **Completed** | 100% (2.1, 2.2, 2.3, 2.4, 2.5 완료) |
-| Phase 3: M3 | **In Progress** | 20% (3.1 Replay Feature 완료) |
+| Phase 3: M3 | **In Progress** | 42% (3.1 Replay, 3.3 Error Handling 완료) |
 | Phase 4: Polish | Not Started | 0% |
 
 ---

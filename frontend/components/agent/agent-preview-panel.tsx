@@ -5,7 +5,8 @@
  * SSE streaming preview for agent testing
  */
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { toast } from "sonner";
 import { useAgentPreview } from "@/hooks/use-agent-preview";
 import type { AgentCreate } from "@/lib/types";
 import { Button } from "@/components/ui/button";
@@ -34,6 +35,15 @@ export function AgentPreviewPanel({
 
   const { isStreaming, content, error, startPreview, stopPreview } =
     useAgentPreview();
+
+  // Show toast notification for errors
+  useEffect(() => {
+    if (error) {
+      toast.error(error, {
+        duration: 5000,
+      });
+    }
+  }, [error]);
 
   const handlePreview = () => {
     if (isStreaming) {
