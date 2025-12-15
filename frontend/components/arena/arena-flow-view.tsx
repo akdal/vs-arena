@@ -8,7 +8,7 @@
  * to use useReactFlow hooks. The parent component is responsible for providing this context.
  */
 
-import { useState, useEffect, useRef, useCallback } from "react";
+import { useState, useEffect, useRef, useCallback, useMemo } from "react";
 import {
   ReactFlow,
   Background,
@@ -23,6 +23,7 @@ import { toast } from "sonner";
 import { nodeTypes } from "../flow/nodes";
 import { edgeTypes } from "../flow/edges";
 import { useDebateFlow } from "@/hooks/use-debate-flow";
+import { useKeyboardShortcuts, formatShortcut, type ShortcutConfig } from "@/hooks/use-keyboard-shortcuts";
 import type { RunDetail } from "@/lib/types";
 import { Badge } from "@/components/ui/badge";
 import { TurnIndicator } from "./turn-indicator";
@@ -50,6 +51,7 @@ function FlowContent({
   const { fitView, setCenter, getNode } = useReactFlow();
   const prevPhaseRef = useRef<string | null>(null);
   const [isPanelOpen, setIsPanelOpen] = useState(true);
+  const [showShortcuts, setShowShortcuts] = useState(false);
 
   // Load panel state from localStorage with error handling
   useEffect(() => {
@@ -93,6 +95,38 @@ function FlowContent({
     },
   });
 
+  // Keyboard shortcuts
+  const shortcuts = useMemo<ShortcutConfig[]>(() => [
+    {
+      key: "f",
+      action: () => fitView({ padding: 0.2, duration: 300 }),
+      description: "Fit view to content",
+    },
+    {
+      key: "Escape",
+      action: () => {
+        if (showShortcuts) {
+          setShowShortcuts(false);
+        } else if (isPanelOpen) {
+          handlePanelToggle();
+        }
+      },
+      description: "Close panel / Close help",
+    },
+    {
+      key: "?",
+      action: () => setShowShortcuts((prev) => !prev),
+      description: "Toggle shortcuts help",
+    },
+    {
+      key: "p",
+      action: handlePanelToggle,
+      description: "Toggle side panel",
+    },
+  ], [fitView, showShortcuts, isPanelOpen, handlePanelToggle]);
+
+  useKeyboardShortcuts(shortcuts);
+
   // Start streaming on mount if autoStart is true
   useEffect(() => {
     if (autoStart && run.run_id) {
@@ -124,12 +158,19 @@ function FlowContent({
   // Show toast notification for errors
   useEffect(() => {
     if (error) {
-      toast.error(error, {
+      toast.error(error.title, {
         id: "arena-flow-error",
+        description: error.description,
         duration: 5000,
+        action: error.action === "retry" ? {
+          label: "Retry",
+          onClick: () => startStream(run.run_id),
+        } : undefined,
       });
+      // Log original error for debugging
+      console.error("Arena flow error:", error.originalError);
     }
-  }, [error]);
+  }, [error, startStream, run.run_id]);
 
   const formatPhase = (phase: string | null) => {
     if (!phase) return "Waiting...";
@@ -150,7 +191,7 @@ function FlowContent({
         />
       }
       mainContent={
-        <div className="min-h-[500px] h-[calc(100vh-400px)] max-h-[800px] w-full rounded-lg border bg-slate-50 dark:bg-slate-900">
+        <div className="min-h-[350px] md:min-h-[500px] h-[50vh] md:h-[calc(100vh-400px)] max-h-[800px] w-full rounded-lg border bg-slate-50 dark:bg-slate-900">
           <ReactFlow
             nodes={nodes}
             edges={edges}
@@ -191,9 +232,40 @@ function FlowContent({
                 )}
               </div>
               {error && (
-                <div className="text-xs text-destructive">{error}</div>
+                <div className="text-xs text-destructive">{error.title}</div>
               )}
+              <button
+                onClick={() => setShowShortcuts(true)}
+                className="text-xs text-muted-foreground hover:text-foreground transition-colors hidden sm:block"
+              >
+                Press ? for shortcuts
+              </button>
             </Panel>
+
+            {/* Keyboard Shortcuts Help Panel */}
+            {showShortcuts && (
+              <Panel position="top-center" className="bg-background/95 backdrop-blur rounded-lg border p-4 shadow-lg">
+                <div className="flex items-center justify-between mb-3">
+                  <h3 className="font-semibold">Keyboard Shortcuts</h3>
+                  <button
+                    onClick={() => setShowShortcuts(false)}
+                    className="text-muted-foreground hover:text-foreground"
+                  >
+                    ✕
+                  </button>
+                </div>
+                <div className="space-y-2">
+                  {shortcuts.map((shortcut, index) => (
+                    <div key={index} className="flex items-center justify-between gap-8 text-sm">
+                      <span className="text-muted-foreground">{shortcut.description}</span>
+                      <kbd className="px-2 py-0.5 bg-muted rounded text-xs font-mono">
+                        {formatShortcut(shortcut)}
+                      </kbd>
+                    </div>
+                  ))}
+                </div>
+              </Panel>
+            )}
           </ReactFlow>
         </div>
       }

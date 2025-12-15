@@ -33,83 +33,159 @@ export const ActionSidePanel = memo(function ActionSidePanel({
   const completedPhases = getCompletedPhases(currentPhase);
 
   return (
-    <div className="relative flex">
-      {/* Toggle Button */}
-      <div className="flex items-start pt-2">
+    <>
+      {/* Mobile: Bottom sheet style */}
+      <div className="lg:hidden">
+        {/* Toggle Button - Floating on mobile */}
         <Button
           variant="outline"
-          size="icon"
+          size="sm"
           onClick={onToggle}
-          className="h-8 w-8"
-          title={isOpen ? "Close panel" : "Open panel"}
+          className="mb-2"
         >
-          {isOpen ? (
-            <ChevronRight className="h-4 w-4" />
-          ) : (
-            <ChevronLeft className="h-4 w-4" />
-          )}
+          {isOpen ? "Hide Details" : "Show Details"}
         </Button>
-      </div>
 
-      {/* Panel Content */}
-      <div
-        className={cn(
-          "transition-all duration-300 overflow-hidden border-l bg-card",
-          isOpen ? "w-80" : "w-0"
-        )}
-      >
-        {isOpen && (
-          <div className="p-4 h-full overflow-y-auto">
-            <Tabs defaultValue="scores" className="w-full">
-              <TabsList className="grid w-full grid-cols-4">
-                <TabsTrigger value="scores" className="text-xs">
-                  Scores
-                </TabsTrigger>
-                <TabsTrigger value="verdict" className="text-xs">
-                  Verdict
-                </TabsTrigger>
-                <TabsTrigger value="progress" className="text-xs">
-                  Progress
-                </TabsTrigger>
-                <TabsTrigger value="log" className="text-xs">
-                  Log
-                </TabsTrigger>
-              </TabsList>
+        {/* Panel Content - Full width on mobile */}
+        <div
+          className={cn(
+            "transition-all duration-300 overflow-hidden rounded-lg border bg-card",
+            isOpen ? "max-h-[500px]" : "max-h-0"
+          )}
+        >
+          {isOpen && (
+            <div className="p-4 overflow-y-auto max-h-[480px]">
+              <Tabs defaultValue="scores" className="w-full">
+                <TabsList className="grid w-full grid-cols-4">
+                  <TabsTrigger value="scores" className="text-xs">
+                    Scores
+                  </TabsTrigger>
+                  <TabsTrigger value="verdict" className="text-xs">
+                    Verdict
+                  </TabsTrigger>
+                  <TabsTrigger value="progress" className="text-xs">
+                    Progress
+                  </TabsTrigger>
+                  <TabsTrigger value="log" className="text-xs">
+                    Log
+                  </TabsTrigger>
+                </TabsList>
 
-              <TabsContent value="scores" className="mt-4">
-                <ScoreDisplay
-                  nodes={nodes}
-                  agentA={run.agent_a}
-                  agentB={run.agent_b}
-                />
-              </TabsContent>
-
-              <TabsContent value="verdict" className="mt-4">
-                <VerdictDisplay
-                  nodes={nodes}
-                  agentAName={run.agent_a.name}
-                  agentBName={run.agent_b.name}
-                />
-              </TabsContent>
-
-              <TabsContent value="progress" className="mt-4">
-                {replayTimeline ? (
-                  replayTimeline
-                ) : (
-                  <ProgressIndicator
-                    currentPhase={currentPhase}
-                    completedPhases={completedPhases}
+                <TabsContent value="scores" className="mt-4">
+                  <ScoreDisplay
+                    nodes={nodes}
+                    agentA={run.agent_a}
+                    agentB={run.agent_b}
                   />
-                )}
-              </TabsContent>
+                </TabsContent>
 
-              <TabsContent value="log" className="mt-4">
-                <DebateLog nodes={nodes} currentPhase={currentPhase} />
-              </TabsContent>
-            </Tabs>
-          </div>
-        )}
+                <TabsContent value="verdict" className="mt-4">
+                  <VerdictDisplay
+                    nodes={nodes}
+                    agentAName={run.agent_a.name}
+                    agentBName={run.agent_b.name}
+                  />
+                </TabsContent>
+
+                <TabsContent value="progress" className="mt-4">
+                  {replayTimeline ? (
+                    replayTimeline
+                  ) : (
+                    <ProgressIndicator
+                      currentPhase={currentPhase}
+                      completedPhases={completedPhases}
+                    />
+                  )}
+                </TabsContent>
+
+                <TabsContent value="log" className="mt-4">
+                  <DebateLog nodes={nodes} currentPhase={currentPhase} />
+                </TabsContent>
+              </Tabs>
+            </div>
+          )}
+        </div>
       </div>
-    </div>
+
+      {/* Desktop: Side panel style */}
+      <div className="hidden lg:flex relative">
+        {/* Toggle Button */}
+        <div className="flex items-start pt-2">
+          <Button
+            variant="outline"
+            size="icon"
+            onClick={onToggle}
+            className="h-8 w-8"
+            title={isOpen ? "Close panel" : "Open panel"}
+          >
+            {isOpen ? (
+              <ChevronRight className="h-4 w-4" />
+            ) : (
+              <ChevronLeft className="h-4 w-4" />
+            )}
+          </Button>
+        </div>
+
+        {/* Panel Content */}
+        <div
+          className={cn(
+            "transition-all duration-300 overflow-hidden border-l bg-card",
+            isOpen ? "w-80" : "w-0"
+          )}
+        >
+          {isOpen && (
+            <div className="p-4 h-full overflow-y-auto">
+              <Tabs defaultValue="scores" className="w-full">
+                <TabsList className="grid w-full grid-cols-4">
+                  <TabsTrigger value="scores" className="text-xs">
+                    Scores
+                  </TabsTrigger>
+                  <TabsTrigger value="verdict" className="text-xs">
+                    Verdict
+                  </TabsTrigger>
+                  <TabsTrigger value="progress" className="text-xs">
+                    Progress
+                  </TabsTrigger>
+                  <TabsTrigger value="log" className="text-xs">
+                    Log
+                  </TabsTrigger>
+                </TabsList>
+
+                <TabsContent value="scores" className="mt-4">
+                  <ScoreDisplay
+                    nodes={nodes}
+                    agentA={run.agent_a}
+                    agentB={run.agent_b}
+                  />
+                </TabsContent>
+
+                <TabsContent value="verdict" className="mt-4">
+                  <VerdictDisplay
+                    nodes={nodes}
+                    agentAName={run.agent_a.name}
+                    agentBName={run.agent_b.name}
+                  />
+                </TabsContent>
+
+                <TabsContent value="progress" className="mt-4">
+                  {replayTimeline ? (
+                    replayTimeline
+                  ) : (
+                    <ProgressIndicator
+                      currentPhase={currentPhase}
+                      completedPhases={completedPhases}
+                    />
+                  )}
+                </TabsContent>
+
+                <TabsContent value="log" className="mt-4">
+                  <DebateLog nodes={nodes} currentPhase={currentPhase} />
+                </TabsContent>
+              </Tabs>
+            </div>
+          )}
+        </div>
+      </div>
+    </>
   );
 });

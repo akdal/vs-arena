@@ -5,6 +5,11 @@
 
 import { useState, useCallback, useRef, useEffect } from "react";
 import type { DebatePhase } from "@/lib/types";
+import {
+  getUserFriendlyError,
+  getMaxReconnectsError,
+  type FriendlyError,
+} from "@/lib/error-messages";
 
 const MAX_RECONNECT_ATTEMPTS = 3;
 const CONNECTION_TIMEOUT_MS = 30000; // 30 seconds without events triggers reconnect
@@ -15,7 +20,7 @@ interface UseDebateStreamState {
   content: string;
   scores: Record<string, unknown>;
   verdict: string | null;
-  error: string | null;
+  error: FriendlyError | null;
   reconnectAttempts: number;
   isReconnecting: boolean;
 }
@@ -80,7 +85,7 @@ export function useDebateStream() {
         ...prev,
         isStreaming: false,
         isReconnecting: false,
-        error: "Connection lost after multiple reconnect attempts",
+        error: getMaxReconnectsError(),
       }));
       return;
     }
@@ -294,17 +299,20 @@ export function useDebateStream() {
           } else if (eventType === "error") {
             try {
               const data = JSON.parse(eventData);
+              // Backend sends "message", also support legacy "error" field
+              const errorMessage = data.message || data.error || "Unknown error";
+              console.error("Stream error:", errorMessage);
               setState((prev) => ({
                 ...prev,
                 isStreaming: false,
-                // Backend sends "message", also support legacy "error" field
-                error: data.message || data.error || "Unknown error",
+                error: getUserFriendlyError(errorMessage),
               }));
             } catch (e) {
+              console.error("Failed to parse error event:", e);
               setState((prev) => ({
                 ...prev,
                 isStreaming: false,
-                error: "Stream error occurred",
+                error: getUserFriendlyError("Stream error occurred"),
               }));
             }
             break;

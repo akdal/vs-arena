@@ -139,7 +139,7 @@ function ReplayContent({ run, turns, header }: ArenaReplayViewProps) {
         />
       }
       mainContent={
-        <div className="min-h-[500px] h-[calc(100vh-400px)] max-h-[800px] w-full rounded-lg border bg-slate-50 dark:bg-slate-900">
+        <div className="min-h-[350px] md:min-h-[500px] h-[50vh] md:h-[calc(100vh-400px)] max-h-[800px] w-full rounded-lg border bg-slate-50 dark:bg-slate-900">
           <ReactFlow
             nodes={nodes}
             edges={edges}

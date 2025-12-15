@@ -12,9 +12,12 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
+import { ConnectionStatus } from "@/components/ui/connection-status";
 import { VerdictPanel, type FinalScores } from "@/components/arena/verdict-panel";
 import { ScoreCard, type ScoreData } from "@/components/arena/score-card";
 import type { DebatePhase } from "@/lib/types";
+
+const MAX_RECONNECT_ATTEMPTS = 3;
 
 interface DebateStreamViewProps {
   runId: string;
@@ -51,6 +54,8 @@ export function DebateStreamView({
     scores,
     verdict,
     error,
+    reconnectAttempts,
+    isReconnecting,
     startStream,
     stopStream,
   } = useDebateStream();
@@ -67,12 +72,19 @@ export function DebateStreamView({
   // Show toast notification for errors
   useEffect(() => {
     if (error) {
-      toast.error(error, {
+      toast.error(error.title, {
         id: "debate-stream-error",
+        description: error.description,
         duration: 5000,
+        action: error.action === "retry" ? {
+          label: "Retry",
+          onClick: () => startStream(runId),
+        } : undefined,
       });
+      // Log original error for debugging
+      console.error("Debate stream error:", error.originalError);
     }
-  }, [error]);
+  }, [error, startStream, runId]);
 
   // Parse scores into structured format
   const parsedScores = useMemo((): ParsedScores => {
@@ -155,6 +167,15 @@ export function DebateStreamView({
 
   return (
     <div className="space-y-6">
+      {/* Connection Status - Fixed position */}
+      <ConnectionStatus
+        isConnected={isStreaming}
+        isReconnecting={isReconnecting}
+        reconnectAttempts={reconnectAttempts}
+        maxAttempts={MAX_RECONNECT_ATTEMPTS}
+        className="fixed top-4 right-4 z-50"
+      />
+
       {/* Phase Indicator */}
       <Card>
         <CardHeader>
@@ -270,10 +291,18 @@ export function DebateStreamView({
       {error && (
         <Card className="border-2 border-destructive">
           <CardHeader>
-            <CardTitle className="text-lg text-destructive">Error</CardTitle>
+            <CardTitle className="text-lg text-destructive">{error.title}</CardTitle>
           </CardHeader>
-          <CardContent>
-            <p className="text-destructive">{error}</p>
+          <CardContent className="space-y-4">
+            <p className="text-muted-foreground">{error.description}</p>
+            {error.action === "retry" && (
+              <Button
+                variant="outline"
+                onClick={() => startStream(runId)}
+              >
+                Try Again
+              </Button>
+            )}
           </CardContent>
         </Card>
       )}

@@ -8,6 +8,10 @@
 import { useState, useCallback, useEffect, useRef } from "react";
 import { useNodesState, useEdgesState } from "@xyflow/react";
 import type { DebatePhase, RunDetail } from "@/lib/types";
+import {
+  getUserFriendlyError,
+  type FriendlyError,
+} from "@/lib/error-messages";
 import type {
   DebateFlowNode,
   DebateFlowEdge,
@@ -32,7 +36,7 @@ export function useDebateFlow({ run, onLayoutChange }: UseDebateFlowOptions) {
   const [edges, setEdges, onEdgesChange] = useEdgesState<DebateFlowEdge>([]);
   const [currentPhase, setCurrentPhase] = useState<DebatePhase | null>(null);
   const [isStreaming, setIsStreaming] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const [error, setError] = useState<FriendlyError | null>(null);
   const phasesRef = useRef<DebatePhase[]>([]);
   const abortControllerRef = useRef<AbortController | null>(null);
 
@@ -336,9 +340,12 @@ export function useDebateFlow({ run, onLayoutChange }: UseDebateFlowOptions) {
               try {
                 const data = JSON.parse(eventData);
                 // Backend sends "message", also support legacy "error" field
-                setError(data.message || data.error || "Unknown error");
+                const errorMessage = data.message || data.error || "Unknown error";
+                console.error("Stream error:", errorMessage);
+                setError(getUserFriendlyError(errorMessage));
               } catch (e) {
-                setError("Stream error occurred");
+                console.error("Failed to parse error event:", e);
+                setError(getUserFriendlyError("Stream error occurred"));
               }
               setIsStreaming(false);
               break;
@@ -361,7 +368,8 @@ export function useDebateFlow({ run, onLayoutChange }: UseDebateFlowOptions) {
         if (error instanceof Error) {
           // Ignore abort errors
           if (error.name !== "AbortError") {
-            setError(error.message);
+            console.error("Stream error:", error.message);
+            setError(getUserFriendlyError(error));
           }
           setIsStreaming(false);
         }

@@ -19,7 +19,7 @@ export const ArenaLayout = memo(function ArenaLayout({
   className,
 }: ArenaLayoutProps) {
   return (
-    <div className={cn("flex flex-col h-full space-y-4", className)}>
+    <div className={cn("flex flex-col h-full space-y-4 px-4 md:px-0", className)}>
       {/* Header */}
       {header}
 
@@ -27,12 +27,12 @@ export const ArenaLayout = memo(function ArenaLayout({
       {turnIndicator}
 
       {/* Main Content + Side Panel */}
-      <div className="flex-1 flex gap-4 min-h-0">
+      <div className="flex-1 flex flex-col lg:flex-row gap-4 min-h-0">
         {/* Main Content Area */}
-        <div className="flex-1 min-w-0">{mainContent}</div>
+        <div className="flex-1 min-w-0 min-h-[400px] lg:min-h-0">{mainContent}</div>
 
-        {/* Side Panel */}
-        {sidePanel}
+        {/* Side Panel - Full width on mobile, fixed width on desktop */}
+        <div className="lg:w-auto">{sidePanel}</div>
       </div>
     </div>
   );

@@ -1,0 +1,170 @@
+/**
+ * User-friendly error message utility
+ * Maps technical errors to human-readable messages with recovery actions
+ */
+
+export type ErrorAction = "retry" | "reconnecting" | "contact" | "none";
+
+export interface FriendlyError {
+  title: string;
+  description: string;
+  action: ErrorAction;
+  originalError: string;
+}
+
+interface ErrorMapping {
+  title: string;
+  description: string;
+  action: ErrorAction;
+}
+
+const ERROR_MESSAGES: Record<string, ErrorMapping> = {
+  ECONNREFUSED: {
+    title: "Cannot connect to server",
+    description: "The backend server is not responding. Please check if the server is running.",
+    action: "retry",
+  },
+  NETWORK_ERROR: {
+    title: "Network connection lost",
+    description: "Please check your internet connection and try again.",
+    action: "retry",
+  },
+  FETCH_ERROR: {
+    title: "Request failed",
+    description: "Could not complete the request. Please try again.",
+    action: "retry",
+  },
+  TIMEOUT: {
+    title: "Request timed out",
+    description: "The server is taking too long to respond. This may be due to a slow LLM response.",
+    action: "retry",
+  },
+  SSE_DISCONNECT: {
+    title: "Stream disconnected",
+    description: "The live debate stream was interrupted. Attempting to reconnect...",
+    action: "reconnecting",
+  },
+  SSE_TIMEOUT: {
+    title: "Connection timeout",
+    description: "No data received for a while. Attempting to reconnect...",
+    action: "reconnecting",
+  },
+  LLM_ERROR: {
+    title: "AI model error",
+    description: "The AI model encountered an issue. Please try again or use a different model.",
+    action: "retry",
+  },
+  OLLAMA_ERROR: {
+    title: "Ollama connection failed",
+    description: "Could not connect to Ollama. Please ensure Ollama is running locally.",
+    action: "retry",
+  },
+  NOT_FOUND: {
+    title: "Not found",
+    description: "The requested resource could not be found.",
+    action: "none",
+  },
+  UNAUTHORIZED: {
+    title: "Unauthorized",
+    description: "You don't have permission to perform this action.",
+    action: "none",
+  },
+  SERVER_ERROR: {
+    title: "Server error",
+    description: "Something went wrong on our end. Please try again later.",
+    action: "retry",
+  },
+  DEFAULT: {
+    title: "Something went wrong",
+    description: "An unexpected error occurred. Please try again.",
+    action: "retry",
+  },
+};
+
+/**
+ * Convert technical error to user-friendly message
+ */
+export function getUserFriendlyError(error: string | Error): FriendlyError {
+  const errorString = error instanceof Error ? error.message : error;
+  const lowerError = errorString.toLowerCase();
+
+  // Match against known patterns
+  if (lowerError.includes("econnrefused") || lowerError.includes("connection refused")) {
+    return { ...ERROR_MESSAGES.ECONNREFUSED, originalError: errorString };
+  }
+
+  if (lowerError.includes("networkerror") || lowerError.includes("network error")) {
+    return { ...ERROR_MESSAGES.NETWORK_ERROR, originalError: errorString };
+  }
+
+  if (lowerError.includes("failed to fetch") || lowerError.includes("fetch failed")) {
+    return { ...ERROR_MESSAGES.FETCH_ERROR, originalError: errorString };
+  }
+
+  if (lowerError.includes("timeout") || lowerError.includes("timed out")) {
+    return { ...ERROR_MESSAGES.TIMEOUT, originalError: errorString };
+  }
+
+  if (lowerError.includes("connection lost") || lowerError.includes("reconnect")) {
+    return { ...ERROR_MESSAGES.SSE_DISCONNECT, originalError: errorString };
+  }
+
+  if (lowerError.includes("sse") || lowerError.includes("stream")) {
+    return { ...ERROR_MESSAGES.SSE_DISCONNECT, originalError: errorString };
+  }
+
+  if (lowerError.includes("llm") || lowerError.includes("model error")) {
+    return { ...ERROR_MESSAGES.LLM_ERROR, originalError: errorString };
+  }
+
+  if (lowerError.includes("ollama")) {
+    return { ...ERROR_MESSAGES.OLLAMA_ERROR, originalError: errorString };
+  }
+
+  if (lowerError.includes("404") || lowerError.includes("not found")) {
+    return { ...ERROR_MESSAGES.NOT_FOUND, originalError: errorString };
+  }
+
+  if (lowerError.includes("401") || lowerError.includes("unauthorized")) {
+    return { ...ERROR_MESSAGES.UNAUTHORIZED, originalError: errorString };
+  }
+
+  if (lowerError.includes("500") || lowerError.includes("internal server")) {
+    return { ...ERROR_MESSAGES.SERVER_ERROR, originalError: errorString };
+  }
+
+  // HTTP status code patterns
+  const httpMatch = errorString.match(/HTTP (\d{3})/i);
+  if (httpMatch) {
+    const status = parseInt(httpMatch[1], 10);
+    if (status === 404) return { ...ERROR_MESSAGES.NOT_FOUND, originalError: errorString };
+    if (status === 401 || status === 403) return { ...ERROR_MESSAGES.UNAUTHORIZED, originalError: errorString };
+    if (status >= 500) return { ...ERROR_MESSAGES.SERVER_ERROR, originalError: errorString };
+  }
+
+  return { ...ERROR_MESSAGES.DEFAULT, originalError: errorString };
+}
+
+/**
+ * Get error message for SSE reconnection state
+ */
+export function getReconnectingError(attempt: number, maxAttempts: number): FriendlyError {
+  return {
+    title: "Reconnecting...",
+    description: `Attempt ${attempt} of ${maxAttempts}. Please wait...`,
+    action: "reconnecting",
+    originalError: `SSE reconnection attempt ${attempt}/${maxAttempts}`,
+  };
+}
+
+/**
+ * Get error message for max reconnection attempts exceeded
+ */
+export function getMaxReconnectsError(): FriendlyError {
+  return {
+    title: "Connection lost",
+    description: "Could not reconnect after multiple attempts. Please refresh the page.",
+    action: "retry",
+    originalError: "Max reconnection attempts exceeded",
+  };
+}
