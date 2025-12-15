@@ -16,14 +16,25 @@ from app.services.ollama import stream_ollama
 router = APIRouter()
 
 
-@router.get("/", response_model=List[AgentResponse])
+@router.get(
+    "/",
+    response_model=List[AgentResponse],
+    summary="List all agents",
+    description="Retrieve all registered debate agents, ordered by creation date (newest first).",
+)
 async def list_agents(db: AsyncSession = Depends(get_db)):
     """Get all agents"""
     agents = await agent_crud.get_all_agents(db)
     return agents
 
 
-@router.post("/", status_code=status.HTTP_201_CREATED, response_model=AgentResponse)
+@router.post(
+    "/",
+    status_code=status.HTTP_201_CREATED,
+    response_model=AgentResponse,
+    summary="Create new agent",
+    description="Create a new debate agent with the specified name, model, persona, and LLM parameters.",
+)
 async def create_agent(
     agent_data: AgentCreate,
     db: AsyncSession = Depends(get_db)
@@ -33,7 +44,12 @@ async def create_agent(
     return agent
 
 
-@router.get("/{agent_id}", response_model=AgentResponse)
+@router.get(
+    "/{agent_id}",
+    response_model=AgentResponse,
+    summary="Get agent by ID",
+    description="Retrieve a specific agent by its UUID.",
+)
 async def get_agent(
     agent_id: UUID,
     db: AsyncSession = Depends(get_db)
@@ -48,7 +64,12 @@ async def get_agent(
     return agent
 
 
-@router.put("/{agent_id}", response_model=AgentResponse)
+@router.put(
+    "/{agent_id}",
+    response_model=AgentResponse,
+    summary="Update agent",
+    description="Update an existing agent. Only provided fields will be updated.",
+)
 async def update_agent(
     agent_id: UUID,
     agent_data: AgentUpdate,
@@ -64,7 +85,12 @@ async def update_agent(
     return agent
 
 
-@router.delete("/{agent_id}", status_code=status.HTTP_204_NO_CONTENT)
+@router.delete(
+    "/{agent_id}",
+    status_code=status.HTTP_204_NO_CONTENT,
+    summary="Delete agent",
+    description="Permanently delete an agent. This cannot be undone.",
+)
 async def delete_agent(
     agent_id: UUID,
     db: AsyncSession = Depends(get_db)
@@ -78,7 +104,13 @@ async def delete_agent(
         )
 
 
-@router.post("/{agent_id}/clone", status_code=status.HTTP_201_CREATED, response_model=AgentResponse)
+@router.post(
+    "/{agent_id}/clone",
+    status_code=status.HTTP_201_CREATED,
+    response_model=AgentResponse,
+    summary="Clone agent",
+    description="Create a copy of an existing agent with '(Copy)' appended to its name.",
+)
 async def clone_agent(
     agent_id: UUID,
     db: AsyncSession = Depends(get_db)
@@ -93,7 +125,19 @@ async def clone_agent(
     return cloned
 
 
-@router.post("/preview")
+@router.post(
+    "/preview",
+    summary="Preview agent (SSE)",
+    description="""
+Test an agent with a 1-turn preview debate using Server-Sent Events (SSE).
+
+**SSE Events:**
+- `start` - Preview started, includes topic/position/agent
+- `chunk` - Token chunk from LLM (content field)
+- `done` - Preview complete, includes full argument
+- `error` - Error occurred during preview
+    """,
+)
 async def preview_agent(preview_data: PreviewRequest):
     """
     Preview agent with 1-turn test

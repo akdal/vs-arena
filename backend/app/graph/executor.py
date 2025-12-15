@@ -57,34 +57,10 @@ async def initialize_debate_state(run_id: str, db: AsyncSession) -> DebateState:
         raise ValueError(f"Run {run_id} not found")
 
     run = run_data["run"]
-    agent_a = run_data["agent_a"]
-    agent_b = run_data["agent_b"]
-    agent_j = run_data["agent_j"]
-
-    # Convert SQLAlchemy models to dicts
-    agent_a_dict = {
-        "agent_id": str(agent_a.agent_id),
-        "name": agent_a.name,
-        "model": agent_a.model,
-        "persona_json": agent_a.persona_json,
-        "params_json": agent_a.params_json
-    }
-
-    agent_b_dict = {
-        "agent_id": str(agent_b.agent_id),
-        "name": agent_b.name,
-        "model": agent_b.model,
-        "persona_json": agent_b.persona_json,
-        "params_json": agent_b.params_json
-    }
-
-    agent_j_dict = {
-        "agent_id": str(agent_j.agent_id),
-        "name": agent_j.name,
-        "model": agent_j.model,
-        "persona_json": agent_j.persona_json,
-        "params_json": agent_j.params_json
-    }
+    # Agents are already dicts from get_run_with_agents
+    agent_a_dict = run_data["agent_a"]
+    agent_b_dict = run_data["agent_b"]
+    agent_j_dict = run_data["agent_j"]
 
     # Initialize state
     state: DebateState = {
@@ -130,7 +106,7 @@ async def persist_turn(turn: Turn, run_id: str, db: AsyncSession) -> None:
         phase=turn["phase"],
         role=turn["role"],
         content=turn["content"],
-        targets=[UUID(t) for t in turn["targets"]],
+        targets=turn["targets"],  # Keep as strings for JSONB serialization
         metadata_json=turn["metadata"]  # Use metadata_json attribute
     )
     db.add(db_turn)

@@ -22,7 +22,23 @@ from app.graph.executor import execute_debate_with_streaming
 router = APIRouter()
 
 
-@router.post("/start", status_code=status.HTTP_201_CREATED, response_model=DebateStartResponse)
+@router.post(
+    "/start",
+    status_code=status.HTTP_201_CREATED,
+    response_model=DebateStartResponse,
+    summary="Start new debate",
+    description="""
+Start a new debate between two agents with a judge.
+
+**Requirements:**
+- All three agents (A, B, Judge) must exist
+- Positions must be opposite (one FOR, one AGAINST)
+
+**Returns:**
+- `run_id` - UUID of the created debate run
+- `stream_url` - SSE endpoint to stream the debate execution
+    """,
+)
 async def start_debate(
     debate_config: DebateStartRequest,
     db: AsyncSession = Depends(get_db)
@@ -87,7 +103,29 @@ async def start_debate(
     )
 
 
-@router.get("/stream/{run_id}")
+@router.get(
+    "/stream/{run_id}",
+    summary="Stream debate (SSE)",
+    description="""
+Execute and stream a debate via Server-Sent Events (SSE).
+
+**SSE Event Types:**
+| Event | Description |
+|-------|-------------|
+| `phase_start` | New phase begins (opening, rebuttal, summary, verdict) |
+| `token` | Individual token from LLM generation |
+| `score` | Scoring results after debate phase |
+| `phase_end` | Phase completed |
+| `verdict` | Final judgment with winner |
+| `run_complete` | Debate finished successfully |
+| `error` | Error during execution |
+
+**Error Codes:**
+- `404` - Run not found
+- `400` - Run already completed or failed
+- `409` - Run already in progress
+    """,
+)
 async def stream_debate(
     run_id: UUID,
     db: AsyncSession = Depends(get_db)
@@ -142,14 +180,24 @@ async def stream_debate(
     return await execute_debate_with_streaming(str(run_id), db)
 
 
-@router.get("/runs", response_model=List[RunResponse])
+@router.get(
+    "/runs",
+    response_model=List[RunResponse],
+    summary="List all runs",
+    description="Retrieve all debate runs ordered by creation time (newest first).",
+)
 async def list_runs(db: AsyncSession = Depends(get_db)):
     """Get all debate runs ordered by creation time (newest first)"""
     runs = await get_all_runs(db)
     return runs
 
 
-@router.get("/runs/{run_id}", response_model=RunDetailResponse)
+@router.get(
+    "/runs/{run_id}",
+    response_model=RunDetailResponse,
+    summary="Get run details",
+    description="Retrieve detailed run information including full agent configurations for A, B, and Judge.",
+)
 async def get_run(run_id: UUID, db: AsyncSession = Depends(get_db)):
     """
     Get run details with full agent information.
@@ -183,7 +231,21 @@ async def get_run(run_id: UUID, db: AsyncSession = Depends(get_db)):
     )
 
 
-@router.get("/runs/{run_id}/turns", response_model=List[TurnResponse])
+@router.get(
+    "/runs/{run_id}/turns",
+    response_model=List[TurnResponse],
+    summary="Get run turns (for replay)",
+    description="""
+Retrieve all turns for a debate run in chronological order.
+
+**Use Cases:**
+- Debate replay functionality
+- Reviewing debate history
+- Analyzing agent performance
+
+**Returns:** List of turns including phase, role, content, and metadata.
+    """,
+)
 async def get_run_turns(run_id: UUID, db: AsyncSession = Depends(get_db)):
     """
     Get all turns for a run ordered by creation time.
@@ -203,7 +265,12 @@ async def get_run_turns(run_id: UUID, db: AsyncSession = Depends(get_db)):
     return turns
 
 
-@router.delete("/runs/{run_id}", status_code=status.HTTP_204_NO_CONTENT)
+@router.delete(
+    "/runs/{run_id}",
+    status_code=status.HTTP_204_NO_CONTENT,
+    summary="Delete run",
+    description="Permanently delete a debate run and all its associated turns. This cannot be undone.",
+)
 async def delete_run_endpoint(run_id: UUID, db: AsyncSession = Depends(get_db)):
     """
     Delete a debate run and all associated turns.
@@ -218,7 +285,24 @@ async def delete_run_endpoint(run_id: UUID, db: AsyncSession = Depends(get_db)):
         )
 
 
-@router.post("/runs/{run_id}/swap", status_code=status.HTTP_201_CREATED, response_model=DebateStartResponse)
+@router.post(
+    "/runs/{run_id}/swap",
+    status_code=status.HTTP_201_CREATED,
+    response_model=DebateStartResponse,
+    summary="Create swap test",
+    description="""
+Create a position-swapped copy of a completed debate for bias detection.
+
+**What it does:**
+- Swaps Agent A ↔ Agent B
+- Swaps Position A ↔ Position B
+- Keeps the same topic, judge, and configuration
+
+**Use Case:** Run both debates and compare results to detect position bias in the judge.
+
+**Requirement:** Original run must be completed.
+    """,
+)
 async def create_swap_test(
     run_id: UUID,
     db: AsyncSession = Depends(get_db)
@@ -314,7 +398,22 @@ def _analyze_position_bias(original: dict, swapped: dict) -> dict:
         }
 
 
-@router.get("/runs/{run_id}/compare/{swap_run_id}")
+@router.get(
+    "/runs/{run_id}/compare/{swap_run_id}",
+    summary="Compare swap test",
+    description="""
+Analyze position bias by comparing original and swapped debate results.
+
+**Bias Analysis Types:**
+| Type | Meaning |
+|------|---------|
+| `position` | Same position won both times → Judge favors that position |
+| `none` | Different positions won → No position bias detected |
+| `inconclusive` | One/both draws or missing data |
+
+**Requirement:** Both runs must be completed.
+    """,
+)
 async def compare_swap_test(
     run_id: UUID,
     swap_run_id: UUID,

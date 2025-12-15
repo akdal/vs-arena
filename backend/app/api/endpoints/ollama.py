@@ -9,7 +9,27 @@ from app.core.config import settings
 router = APIRouter()
 
 
-@router.get("/models")
+@router.get(
+    "/models",
+    summary="List available models",
+    description="""
+Retrieve all models available in the local Ollama installation.
+
+**Response Format:**
+```json
+{
+  "models": [
+    {"name": "llama3.2", "size": "2.0 GB", "quantization": "Q4_0"},
+    {"name": "qwen2.5:7b", "size": "4.7 GB", "quantization": "Q4_K_M"}
+  ]
+}
+```
+
+**Error Codes:**
+- `503` - Ollama server is not running
+- `500` - Failed to fetch models
+    """,
+)
 async def list_models():
     """Get available Ollama models"""
     try:
@@ -44,7 +64,26 @@ async def list_models():
         )
 
 
-@router.get("/status")
+@router.get(
+    "/status",
+    summary="Check Ollama status",
+    description="""
+Check the status of the local Ollama server.
+
+**Response Format:**
+```json
+{
+  "status": "online",   // "online", "offline", or "error"
+  "url": "http://localhost:11434"
+}
+```
+
+**Status Values:**
+- `online` - Ollama server is running and responsive
+- `offline` - Cannot connect to Ollama server
+- `error` - Connected but encountered an error (includes error message)
+    """,
+)
 async def get_status():
     """Check Ollama server status"""
     try:
