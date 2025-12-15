@@ -289,7 +289,7 @@
 
 ### 3.5 Agent Clone
 - [x] `POST /api/agents/{id}/clone` API (Phase 1.3에서 구현 완료)
-- [ ] Clone 버튼 UI
+- [x] Clone 버튼 UI (AgentCard에 구현 완료 - Phase 1.8)
 
 ### 3.6 Judge Fairness (Swap Test)
 - [ ] Swap Test 실행 API
@@ -334,7 +334,7 @@
 | Phase 0: Setup | **Completed** | 95% |
 | Phase 1: M1 | **Completed** | 100% (Backend + Frontend Agent Module) |
 | Phase 2: M2 | **Completed** | 100% (2.1, 2.2, 2.3, 2.4, 2.5 완료) |
-| Phase 3: M3 | **In Progress** | 80% (3.1, 3.2, 3.3, 3.4 완료) |
+| Phase 3: M3 | **In Progress** | 83% (3.1-3.5 완료, 3.6 남음) |
 | Phase 4: Polish | Not Started | 0% |
 
 ---
