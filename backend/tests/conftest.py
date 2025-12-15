@@ -9,6 +9,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.models.agent import Agent
 from app.models.run import Run
+from app.models.turn import Turn
 from app.models.schemas import AgentCreate, AgentUpdate, DebateStartRequest
 
 
@@ -154,4 +155,35 @@ def mock_ollama_stream_response():
     return [
         '{"response": "Hello ", "done": false}',
         '{"response": "World", "done": true}'
+    ]
+
+
+@pytest.fixture
+def sample_turns(sample_run_id, sample_agent_list):
+    """Create a list of sample turns for a run."""
+    agents = sample_agent_list
+    base_time = datetime.utcnow()
+    return [
+        Turn(
+            turn_id=uuid4(),
+            run_id=sample_run_id,
+            agent_id=agents[0].agent_id,
+            phase="opening",
+            role="agent_a",
+            content="Opening argument from Agent A",
+            targets=[],
+            metadata_json={"round": 1},
+            created_at=base_time
+        ),
+        Turn(
+            turn_id=uuid4(),
+            run_id=sample_run_id,
+            agent_id=agents[1].agent_id,
+            phase="opening",
+            role="agent_b",
+            content="Opening argument from Agent B",
+            targets=[],
+            metadata_json={"round": 1},
+            created_at=base_time
+        ),
     ]

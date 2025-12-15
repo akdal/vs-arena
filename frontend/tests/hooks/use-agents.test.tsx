@@ -9,6 +9,7 @@ import {
   useAgents,
   useAgent,
   useCreateAgent,
+  useUpdateAgent,
   useDeleteAgent,
   useCloneAgent,
 } from '@/hooks/use-agents';
@@ -167,6 +168,57 @@ describe('useCreateAgent', () => {
         params_json: {},
       })
     ).rejects.toThrow('Creation failed');
+  });
+});
+
+describe('useUpdateAgent', () => {
+  beforeEach(() => {
+    vi.resetAllMocks();
+  });
+
+  it('updates agent successfully', async () => {
+    const updatedAgent = { ...mockAgent, name: 'Updated Agent' };
+    vi.mocked(apiClient.updateAgent).mockResolvedValue(updatedAgent);
+
+    const { result } = renderHook(() => useUpdateAgent(), {
+      wrapper: createWrapper(),
+    });
+
+    const updateData = { name: 'Updated Agent' };
+    const updated = await result.current.mutateAsync({ id: '123', data: updateData });
+
+    expect(apiClient.updateAgent).toHaveBeenCalledWith('123', updateData);
+    expect(updated.name).toBe('Updated Agent');
+  });
+
+  it('handles update error', async () => {
+    vi.mocked(apiClient.updateAgent).mockRejectedValue(new Error('Update failed'));
+
+    const { result } = renderHook(() => useUpdateAgent(), {
+      wrapper: createWrapper(),
+    });
+
+    await expect(
+      result.current.mutateAsync({ id: '123', data: { name: 'New Name' } })
+    ).rejects.toThrow('Update failed');
+  });
+
+  it('updates partial fields', async () => {
+    const updatedAgent = { ...mockAgent, persona_json: { role: 'judge' } };
+    vi.mocked(apiClient.updateAgent).mockResolvedValue(updatedAgent);
+
+    const { result } = renderHook(() => useUpdateAgent(), {
+      wrapper: createWrapper(),
+    });
+
+    await result.current.mutateAsync({
+      id: '123',
+      data: { persona_json: { role: 'judge' } },
+    });
+
+    expect(apiClient.updateAgent).toHaveBeenCalledWith('123', {
+      persona_json: { role: 'judge' },
+    });
   });
 });
 

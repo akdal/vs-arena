@@ -8,6 +8,7 @@ import type { ReactNode } from 'react';
 import {
   useRuns,
   useRun,
+  useRunTurns,
   useStartDebate,
   useDeleteRun,
   useCreateSwapTest,
@@ -52,10 +53,59 @@ const mockRun = {
 
 const mockRunDetail = {
   ...mockRun,
-  agent_a: { agent_id: 'agent-1', name: 'Agent A', model: 'llama3' },
-  agent_b: { agent_id: 'agent-2', name: 'Agent B', model: 'llama3' },
-  agent_j: { agent_id: 'judge-1', name: 'Judge', model: 'llama3' },
+  agent_a: {
+    agent_id: 'agent-1',
+    name: 'Agent A',
+    model: 'llama3',
+    persona_json: {},
+    params_json: {},
+    created_at: '2024-01-01T00:00:00Z',
+    updated_at: '2024-01-01T00:00:00Z',
+  },
+  agent_b: {
+    agent_id: 'agent-2',
+    name: 'Agent B',
+    model: 'llama3',
+    persona_json: {},
+    params_json: {},
+    created_at: '2024-01-01T00:00:00Z',
+    updated_at: '2024-01-01T00:00:00Z',
+  },
+  agent_j: {
+    agent_id: 'judge-1',
+    name: 'Judge',
+    model: 'llama3',
+    persona_json: {},
+    params_json: {},
+    created_at: '2024-01-01T00:00:00Z',
+    updated_at: '2024-01-01T00:00:00Z',
+  },
 };
+
+const mockTurns = [
+  {
+    turn_id: 'turn-1',
+    run_id: 'run-123',
+    agent_id: 'agent-1',
+    phase: 'opening',
+    role: 'agent_a',
+    content: 'Opening argument from A',
+    targets: [],
+    metadata: { round: 1 },
+    created_at: '2024-01-01T00:00:00Z',
+  },
+  {
+    turn_id: 'turn-2',
+    run_id: 'run-123',
+    agent_id: 'agent-2',
+    phase: 'opening',
+    role: 'agent_b',
+    content: 'Opening argument from B',
+    targets: [],
+    metadata: { round: 1 },
+    created_at: '2024-01-01T00:00:01Z',
+  },
+];
 
 describe('useRuns', () => {
   beforeEach(() => {
@@ -63,7 +113,7 @@ describe('useRuns', () => {
   });
 
   it('fetches runs successfully', async () => {
-    vi.mocked(apiClient.getRuns).mockResolvedValue([mockRun as never]);
+    vi.mocked(apiClient.getRuns).mockResolvedValue([mockRun]);
 
     const { result } = renderHook(() => useRuns(), {
       wrapper: createWrapper(),
@@ -94,7 +144,7 @@ describe('useRun', () => {
   });
 
   it('fetches run by ID', async () => {
-    vi.mocked(apiClient.getRun).mockResolvedValue(mockRunDetail as never);
+    vi.mocked(apiClient.getRun).mockResolvedValue(mockRunDetail);
 
     const { result } = renderHook(() => useRun('run-123'), {
       wrapper: createWrapper(),
@@ -120,6 +170,61 @@ describe('useRun', () => {
     vi.mocked(apiClient.getRun).mockRejectedValue(new Error('Run not found'));
 
     const { result } = renderHook(() => useRun('invalid-id'), {
+      wrapper: createWrapper(),
+    });
+
+    await waitFor(() => expect(result.current.isError).toBe(true));
+
+    expect(result.current.error?.message).toBe('Run not found');
+  });
+});
+
+describe('useRunTurns', () => {
+  beforeEach(() => {
+    vi.resetAllMocks();
+  });
+
+  it('fetches turns for run', async () => {
+    vi.mocked(apiClient.getRunTurns).mockResolvedValue(mockTurns);
+
+    const { result } = renderHook(() => useRunTurns('run-123'), {
+      wrapper: createWrapper(),
+    });
+
+    await waitFor(() => expect(result.current.isSuccess).toBe(true));
+
+    expect(result.current.data).toHaveLength(2);
+    expect(result.current.data?.[0].phase).toBe('opening');
+    expect(result.current.data?.[0].role).toBe('agent_a');
+    expect(apiClient.getRunTurns).toHaveBeenCalledWith('run-123');
+  });
+
+  it('does not fetch when runId is null', () => {
+    const { result } = renderHook(() => useRunTurns(null), {
+      wrapper: createWrapper(),
+    });
+
+    expect(result.current.isLoading).toBe(false);
+    expect(result.current.data).toBeUndefined();
+    expect(apiClient.getRunTurns).not.toHaveBeenCalled();
+  });
+
+  it('returns empty array when no turns exist', async () => {
+    vi.mocked(apiClient.getRunTurns).mockResolvedValue([]);
+
+    const { result } = renderHook(() => useRunTurns('run-123'), {
+      wrapper: createWrapper(),
+    });
+
+    await waitFor(() => expect(result.current.isSuccess).toBe(true));
+
+    expect(result.current.data).toEqual([]);
+  });
+
+  it('handles fetch error', async () => {
+    vi.mocked(apiClient.getRunTurns).mockRejectedValue(new Error('Run not found'));
+
+    const { result } = renderHook(() => useRunTurns('invalid-run'), {
       wrapper: createWrapper(),
     });
 
@@ -246,17 +351,33 @@ describe('useSwapComparison', () => {
 
   it('fetches comparison when both IDs provided', async () => {
     const mockComparison = {
-      original: { ...mockRun, winner: 'A' },
-      swapped: { ...mockRun, run_id: 'swap-run', winner: 'B' },
+      original: {
+        run_id: 'run-123',
+        agent_a: mockRunDetail.agent_a,
+        agent_b: mockRunDetail.agent_b,
+        position_a: 'FOR',
+        position_b: 'AGAINST',
+        winner: 'A',
+        scores_a: { total: 80 },
+        scores_b: { total: 70 },
+      },
+      swapped: {
+        run_id: 'swap-run',
+        agent_a: mockRunDetail.agent_b,
+        agent_b: mockRunDetail.agent_a,
+        position_a: 'AGAINST',
+        position_b: 'FOR',
+        winner: 'B',
+        scores_a: { total: 65 },
+        scores_b: { total: 75 },
+      },
       analysis: {
-        bias_type: 'none',
+        bias_type: 'none' as const,
         biased_toward: null,
         description: 'No bias detected',
       },
     };
-    vi.mocked(apiClient.getSwapComparison).mockResolvedValue(
-      mockComparison as never
-    );
+    vi.mocked(apiClient.getSwapComparison).mockResolvedValue(mockComparison);
 
     const { result } = renderHook(
       () => useSwapComparison('run-123', 'swap-run-123'),

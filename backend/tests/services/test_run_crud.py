@@ -9,11 +9,14 @@ from unittest.mock import AsyncMock, MagicMock, patch
 from app.services.run_crud import (
     create_run,
     get_run_by_id,
+    get_run_with_agents,
     update_run_status,
     get_all_runs,
-    delete_run
+    delete_run,
+    get_turns_by_run_id
 )
 from app.models.run import Run
+from app.models.agent import Agent
 
 
 class TestCreateRun:
@@ -214,3 +217,90 @@ class TestDeleteRun:
 
         assert result is False
         mock_db.delete.assert_not_called()
+
+
+class TestGetTurnsByRunId:
+    """Tests for get_turns_by_run_id function."""
+
+    @pytest.mark.asyncio
+    async def test_returns_turns_ordered_by_creation(self, mock_db, sample_turns):
+        """get_turns_by_run_id should return turns ordered by creation time."""
+        mock_result = MagicMock()
+        mock_result.scalars.return_value.all.return_value = sample_turns
+        mock_db.execute = AsyncMock(return_value=mock_result)
+
+        turns = await get_turns_by_run_id(mock_db, sample_turns[0].run_id)
+
+        assert len(turns) == 2
+        assert turns[0].phase == "opening"
+        assert turns[0].role == "agent_a"
+        assert turns[1].role == "agent_b"
+
+    @pytest.mark.asyncio
+    async def test_returns_empty_list_when_no_turns(self, mock_db):
+        """get_turns_by_run_id should return empty list when run has no turns."""
+        mock_result = MagicMock()
+        mock_result.scalars.return_value.all.return_value = []
+        mock_db.execute = AsyncMock(return_value=mock_result)
+
+        turns = await get_turns_by_run_id(mock_db, uuid4())
+
+        assert turns == []
+
+
+class TestGetRunWithAgents:
+    """Tests for get_run_with_agents function."""
+
+    @pytest.mark.asyncio
+    async def test_returns_run_with_agent_details(self, mock_db, sample_run, sample_agent_list):
+        """get_run_with_agents should return run with all agent details."""
+        agents = sample_agent_list
+        agent_a = agents[0]
+        agent_b = agents[1]
+        agent_j = agents[0]  # Using same as agent_a for judge
+
+        # Mock execute for run query
+        mock_result = MagicMock()
+        mock_result.scalar_one_or_none.return_value = sample_run
+        mock_db.execute = AsyncMock(return_value=mock_result)
+
+        # Mock get for individual agents
+        mock_db.get = AsyncMock(side_effect=[agent_a, agent_b, agent_j])
+
+        result = await get_run_with_agents(mock_db, sample_run.run_id)
+
+        assert result is not None
+        assert "run" in result
+        assert "agent_a" in result
+        assert "agent_b" in result
+        assert "agent_j" in result
+        assert result["run"].run_id == sample_run.run_id
+        assert result["agent_a"]["name"] == agent_a.name
+        assert result["agent_b"]["name"] == agent_b.name
+
+    @pytest.mark.asyncio
+    async def test_returns_none_when_run_not_found(self, mock_db):
+        """get_run_with_agents should return None when run not found."""
+        mock_result = MagicMock()
+        mock_result.scalar_one_or_none.return_value = None
+        mock_db.execute = AsyncMock(return_value=mock_result)
+
+        result = await get_run_with_agents(mock_db, uuid4())
+
+        assert result is None
+
+    @pytest.mark.asyncio
+    async def test_returns_none_when_agent_missing(self, mock_db, sample_run, sample_agent_list):
+        """get_run_with_agents should return None if any agent is missing."""
+        agents = sample_agent_list
+
+        mock_result = MagicMock()
+        mock_result.scalar_one_or_none.return_value = sample_run
+        mock_db.execute = AsyncMock(return_value=mock_result)
+
+        # Return None for one of the agents
+        mock_db.get = AsyncMock(side_effect=[agents[0], None, agents[0]])
+
+        result = await get_run_with_agents(mock_db, sample_run.run_id)
+
+        assert result is None
