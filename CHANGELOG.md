@@ -94,19 +94,25 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Testing Infrastructure**: Comprehensive test suite (Phase 4.1)
   - Backend tests (pytest + pytest-asyncio):
     - `pytest.ini`: Configuration with asyncio_mode=auto
-    - `tests/conftest.py`: Shared fixtures (mock_db, sample_agent, sample_run)
+    - `tests/conftest.py`: Shared fixtures (mock_db, sample_agent, sample_run, sample_turn)
     - `tests/services/test_agent_crud.py`: Agent CRUD tests (7 tests)
-    - `tests/services/test_run_crud.py`: Run CRUD tests (8 tests)
+    - `tests/services/test_run_crud.py`: Run CRUD tests (8 tests) + get_turns_by_run_id, get_run_with_agents
     - `tests/services/test_ollama.py`: Ollama service tests (8 tests)
     - `tests/api/test_agents_api.py`: Agent API endpoint tests (9 tests)
-    - `tests/api/test_debate_api.py`: Debate API endpoint tests (7 tests)
+    - `tests/api/test_debate_api.py`: Debate API endpoint tests (7 tests) + get_run_turns, compare_swap_test
+    - Total: ~47 backend tests across 5 test files
   - Frontend tests (Vitest + React Testing Library):
     - `vitest.config.ts`: Configuration with jsdom environment
     - `tests/setup.ts`: Global mocks (next/navigation, sonner)
-    - `tests/hooks/use-agents.test.tsx`: Agent hook tests (11 tests)
-    - `tests/hooks/use-debate.test.tsx`: Debate hook tests (13 tests)
+    - `tests/hooks/use-agents.test.tsx`: Agent hook tests (11 tests) + useUpdateAgent
+    - `tests/hooks/use-debate.test.tsx`: Debate hook tests (13 tests) + useRunTurns
     - `tests/components/agent-card.test.tsx`: AgentCard tests (9 tests)
     - `tests/components/debate-setup-form.test.tsx`: Form tests (8 tests)
+    - Total: 48 frontend tests across 4 test files
+  - Test quality improvements:
+    - Fixed fragile side_effect ordering with dict lookup patterns
+    - Fixed weak assertions with full response verification
+    - Fixed unsafe type casts by providing complete mock data
   - E2E tests deferred (requires real Ollama instance)
 
 - **React Flow Visualization**: Complete graph-based debate visualization (Phase 2.1)
@@ -1081,6 +1087,77 @@ BP Lite 토론 규칙 위반 감지 시스템 구현 - Forbidden Phrase 감지 �
 - `/backend/app/graph/nodes/utils.py` - detect_forbidden_phrases() 함수 추가
 - `/backend/app/graph/prompts/judge_prompts.py` - 3개 채점 프롬프트 업데이트
 - `/backend/app/graph/nodes/judge.py` - 6개 채점 노드 업데이트
+
+---
+
+### 2025-12-15: Phase 4.1 Testing Infrastructure 완료
+
+**목표 (Goal)**:
+프로젝트 품질 보증을 위한 포괄적인 테스트 인프라 구축 - Backend pytest, Frontend Vitest 기반
+
+**구현 내용 (Implementation)**:
+
+1. **Backend 테스트 인프라**:
+   - `pytest.ini`: asyncio_mode=auto 설정으로 async 테스트 지원
+   - `tests/conftest.py`: 공유 픽스처 정의
+     * `mock_db`: AsyncSession 모킹
+     * `sample_agent`: Agent 테스트 데이터
+     * `sample_run`: Run 테스트 데이터
+     * `sample_turn`: Turn 테스트 데이터 (수정 후 추가)
+
+2. **Backend 서비스 테스트 (23 tests)**:
+   - `test_agent_crud.py` (7 tests): create, get_all, get_by_id, update, delete, clone, not_found
+   - `test_run_crud.py` (8 tests): create, get_all, get_by_id, get_with_agents, update_status, delete, get_turns_by_run_id
+   - `test_ollama.py` (8 tests): get_models, get_status, call_ollama, stream_ollama, errors
+
+3. **Backend API 테스트 (16 tests)**:
+   - `test_agents_api.py` (9 tests): GET/POST/PUT/DELETE endpoints, clone, preview
+   - `test_debate_api.py` (7 tests): start, stream, runs, run_detail, run_turns, compare_swap_test
+
+4. **Frontend 테스트 인프라**:
+   - `vitest.config.ts`: jsdom 환경, path aliases, setup file 설정
+   - `tests/setup.ts`: 글로벌 모킹 (next/navigation, sonner)
+   - Test scripts: `npm run test`, `npm run test:run`, `npm run test:coverage`
+
+5. **Frontend Hook 테스트 (24 tests)**:
+   - `use-agents.test.tsx` (11 tests): useAgents, useAgent, useCreateAgent, useUpdateAgent, useDeleteAgent, useCloneAgent
+   - `use-debate.test.tsx` (13 tests): useStartDebate, useRuns, useRun, useRunTurns, useCreateSwapTest, useSwapComparison
+
+6. **Frontend 컴포넌트 테스트 (17 tests)**:
+   - `agent-card.test.tsx` (9 tests): rendering, actions, clone, delete
+   - `debate-setup-form.test.tsx` (8 tests): rendering, validation, submission
+
+7. **테스트 품질 개선** (commit 0fc0f04):
+   - dict lookup 패턴으로 fragile side_effect 순서 의존성 제거
+   - 전체 응답 검증으로 weak assertions 강화
+   - 완전한 mock 데이터 제공으로 unsafe type cast 방지
+   - Turn fixture 추가로 get_turns_by_run_id 테스트 가능
+
+**결과 (Result)**:
+- Backend: ~47 tests across 5 test files - All passing
+- Frontend: 48 tests across 4 test files - All passing
+- Build 검증 완료 (TypeScript 컴파일 에러 없음)
+- 테스트 커버리지 기반으로 향후 리팩토링 안정성 확보
+
+**관련 파일 (Related Files)**:
+- `/backend/pytest.ini` - Pytest 설정
+- `/backend/tests/conftest.py` - 공유 픽스처
+- `/backend/tests/services/test_agent_crud.py` - Agent 서비스 테스트
+- `/backend/tests/services/test_run_crud.py` - Run 서비스 테스트
+- `/backend/tests/services/test_ollama.py` - Ollama 서비스 테스트
+- `/backend/tests/api/test_agents_api.py` - Agent API 테스트
+- `/backend/tests/api/test_debate_api.py` - Debate API 테스트
+- `/frontend/vitest.config.ts` - Vitest 설정
+- `/frontend/tests/setup.ts` - 테스트 셋업
+- `/frontend/tests/hooks/use-agents.test.tsx` - Agent Hook 테스트
+- `/frontend/tests/hooks/use-debate.test.tsx` - Debate Hook 테스트
+- `/frontend/tests/components/agent-card.test.tsx` - AgentCard 테스트
+- `/frontend/tests/components/debate-setup-form.test.tsx` - DebateSetupForm 테스트
+- `/frontend/package.json` - 테스트 스크립트 추가
+
+**Commits**:
+- `2b20692` Phase 4.1: Testing Infrastructure complete
+- `0fc0f04` fix: Improve Phase 4.1 test coverage and quality
 
 ---
 
