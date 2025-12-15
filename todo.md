@@ -302,12 +302,15 @@
 ## Phase 4: Quality & Polish
 
 ### 4.1 Testing
-- [ ] Backend 단위 테스트
-  - [ ] Agent CRUD
-  - [ ] Ollama 연동
-  - [ ] LangGraph 플로우
-- [ ] Frontend 컴포넌트 테스트
-- [ ] E2E 테스트 (전체 토론 플로우)
+- [x] Backend 단위 테스트
+  - [x] Agent CRUD (7 tests)
+  - [x] Run CRUD (8 tests)
+  - [x] Ollama 연동 (8 tests)
+  - [x] API 엔드포인트 (16 tests)
+- [x] Frontend 테스트
+  - [x] Hook 테스트 (24 tests)
+  - [x] 컴포넌트 테스트 (17 tests)
+- [ ] E2E 테스트 (전체 토론 플로우) - deferred
 
 ### 4.2 Performance
 - [ ] SSE 연결 최적화
@@ -335,7 +338,7 @@
 | Phase 1: M1 | **Completed** | 100% (Backend + Frontend Agent Module) |
 | Phase 2: M2 | **Completed** | 100% (2.1, 2.2, 2.3, 2.4, 2.5 완료) |
 | Phase 3: M3 | **Completed** | 100% (3.1-3.6 완료) |
-| Phase 4: Polish | Not Started | 0% |
+| Phase 4: Polish | **In Progress** | 25% (4.1 완료) |
 
 ---
 

@@ -91,6 +91,24 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Arena page integration with URL param `?original=` for comparison
   - Note: Consistency scoring excluded (individual debate variability is part of game nature)
 
+- **Testing Infrastructure**: Comprehensive test suite (Phase 4.1)
+  - Backend tests (pytest + pytest-asyncio):
+    - `pytest.ini`: Configuration with asyncio_mode=auto
+    - `tests/conftest.py`: Shared fixtures (mock_db, sample_agent, sample_run)
+    - `tests/services/test_agent_crud.py`: Agent CRUD tests (7 tests)
+    - `tests/services/test_run_crud.py`: Run CRUD tests (8 tests)
+    - `tests/services/test_ollama.py`: Ollama service tests (8 tests)
+    - `tests/api/test_agents_api.py`: Agent API endpoint tests (9 tests)
+    - `tests/api/test_debate_api.py`: Debate API endpoint tests (7 tests)
+  - Frontend tests (Vitest + React Testing Library):
+    - `vitest.config.ts`: Configuration with jsdom environment
+    - `tests/setup.ts`: Global mocks (next/navigation, sonner)
+    - `tests/hooks/use-agents.test.tsx`: Agent hook tests (11 tests)
+    - `tests/hooks/use-debate.test.tsx`: Debate hook tests (13 tests)
+    - `tests/components/agent-card.test.tsx`: AgentCard tests (9 tests)
+    - `tests/components/debate-setup-form.test.tsx`: Form tests (8 tests)
+  - E2E tests deferred (requires real Ollama instance)
+
 - **React Flow Visualization**: Complete graph-based debate visualization (Phase 2.1)
   - Flow types and TypeScript definitions
   - Custom node types:
