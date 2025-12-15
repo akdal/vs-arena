@@ -66,6 +66,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
     - -2 points per forbidden phrase violation
     - -5 points for new arguments in Summary
 
+- **Character Showcase Enhancement**: Agent gallery with detail drawer (Phase 3.4)
+  - shadcn/ui Sheet component integration
+  - AgentGalleryCard: Click-focused card for gallery view
+  - AgentDetailDrawer: Slide-out panel with full agent details
+    - Persona and parameters display
+    - Embedded preview panel with SSE streaming
+    - Edit Agent and Use in Debate actions
+  - Model filter badges: Click to filter by specific model
+  - Enhanced showcase page with drawer integration
+  - Barrel exports for agent components
+
 - **React Flow Visualization**: Complete graph-based debate visualization (Phase 2.1)
   - Flow types and TypeScript definitions
   - Custom node types:
@@ -881,6 +892,54 @@ React Flow를 사용한 debate 시각화 기본 구현 - 커스텀 노드/엣지
 - `/frontend/components/arena/turn-indicator.tsx` - mode prop 추가
 - `/frontend/components/arena/index.ts` - export 추가
 - `/frontend/lib/types.ts` - ReplaySpeed 타입 추가
+
+---
+
+### 2025-12-15: Phase 3.4 Character Showcase Enhancement 완료
+
+**목표 (Goal)**:
+Character Showcase 페이지 개선 - Agent 상세 정보 드로어 및 모델 필터 기능 추가
+
+**구현 내용 (Implementation)**:
+
+1. **shadcn/ui Sheet 컴포넌트 설치**:
+   - `npx shadcn@latest add sheet`
+   - Radix UI Dialog 기반 슬라이드 패널
+
+2. **AgentGalleryCard 컴포넌트** (components/agent/agent-gallery-card.tsx):
+   - 클릭 포커스 카드 (기존 AgentCard는 액션 포커스)
+   - hover:shadow-lg, hover:border-primary/50 효과
+   - Role, Style, Tone 미리보기 표시
+
+3. **AgentDetailDrawer 컴포넌트** (components/agent/agent-detail-drawer.tsx):
+   - Sheet 기반 슬라이드 아웃 패널 (540px width)
+   - Persona 상세 정보 (2-column grid)
+   - Parameters 상세 정보 (3-column grid)
+   - AgentPreviewPanel 통합 (SSE 스트리밍 프리뷰)
+   - 액션 버튼: Edit Agent, Use in Debate
+
+4. **Showcase 페이지 업데이트** (app/agent/showcase/page.tsx):
+   - AgentCard → AgentGalleryCard 교체
+   - 카드 클릭 시 AgentDetailDrawer 열기
+   - 모델 필터 Badge 추가 (All + 각 모델별)
+   - 결과 카운트에 필터 정보 표시
+
+5. **컴포넌트 Barrel Export** (components/agent/index.ts):
+   - 모든 agent 컴포넌트 export 파일 생성
+
+**결과 (Result)**:
+- Phase 3.4 완료로 Phase 3 (M3) 진행률 80% 달성
+- 에이전트 갤러리에서 클릭하여 상세 정보 확인 가능
+- 드로어 내에서 바로 프리뷰 테스트 실행 가능
+- 모델별 필터링으로 빠른 탐색 지원
+- TypeScript 빌드 성공
+
+**관련 파일 (Related Files)**:
+- `/frontend/components/ui/sheet.tsx` - shadcn/ui Sheet (신규)
+- `/frontend/components/agent/agent-gallery-card.tsx` - 갤러리 카드 (신규)
+- `/frontend/components/agent/agent-detail-drawer.tsx` - 상세 드로어 (신규)
+- `/frontend/components/agent/index.ts` - Barrel export (신규)
+- `/frontend/app/agent/showcase/page.tsx` - 페이지 업데이트
 
 ---
 

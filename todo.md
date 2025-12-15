@@ -279,13 +279,13 @@
 - [x] 사용자 알림 UI (Sonner toast notifications)
 
 ### 3.4 Character Showcase
-- [ ] 라우팅 설정 (`/agent/showcase`)
-- [ ] AgentGallery 컴포넌트
-- [ ] AgentGalleryCard 컴포넌트
-- [ ] AgentDetailDrawer 컴포넌트
-  - [ ] 상세 정보 표시
-  - [ ] Preview 실행 버튼
-- [ ] 필터/정렬 기능 (모델별, 이름순)
+- [x] 라우팅 설정 (`/agent/showcase`) - 기존 구현 완료
+- [x] AgentGalleryCard 컴포넌트
+- [x] AgentDetailDrawer 컴포넌트
+  - [x] 상세 정보 표시 (Persona, Parameters)
+  - [x] Preview 실행 버튼 (AgentPreviewPanel 통합)
+  - [x] Edit Agent, Use in Debate 액션
+- [x] 필터/정렬 기능 (모델별 Badge 필터, 이름/날짜/모델 정렬)
 
 ### 3.5 Agent Clone
 - [x] `POST /api/agents/{id}/clone` API (Phase 1.3에서 구현 완료)
@@ -334,7 +334,7 @@
 | Phase 0: Setup | **Completed** | 95% |
 | Phase 1: M1 | **Completed** | 100% (Backend + Frontend Agent Module) |
 | Phase 2: M2 | **Completed** | 100% (2.1, 2.2, 2.3, 2.4, 2.5 완료) |
-| Phase 3: M3 | **In Progress** | 60% (3.1, 3.2, 3.3 완료) |
+| Phase 3: M3 | **In Progress** | 80% (3.1, 3.2, 3.3, 3.4 완료) |
 | Phase 4: Polish | Not Started | 0% |
 
 ---
