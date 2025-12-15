@@ -48,7 +48,7 @@ export function useDebateFlow({ run, onLayoutChange }: UseDebateFlowOptions) {
   const phasesRef = useRef<DebatePhase[]>([]);
   const abortControllerRef = useRef<AbortController | null>(null);
   const currentRunIdRef = useRef<string | null>(null);
-  const connectionTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const connectionTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   // Token batching refs for performance (reduces renders from 100+/sec to ~60/sec)
   const tokenBufferRef = useRef<string>("");
@@ -60,18 +60,15 @@ export function useDebateFlow({ run, onLayoutChange }: UseDebateFlowOptions) {
   const reconnectAttemptsRef = useRef(0);
   const isReconnectingRef = useRef(false);
 
-  // Sync refs with state
+  // Ref to break circular dependency between attemptReconnect and startStreamInternal
+  const startStreamInternalRef = useRef<((runId: string, isReconnect?: boolean) => Promise<void>) | null>(null);
+
+  // Sync refs with state (consolidated for efficiency)
   useEffect(() => {
     isStreamingRef.current = isStreaming;
-  }, [isStreaming]);
-
-  useEffect(() => {
     reconnectAttemptsRef.current = reconnectAttempts;
-  }, [reconnectAttempts]);
-
-  useEffect(() => {
     isReconnectingRef.current = isReconnecting;
-  }, [isReconnecting]);
+  }, [isStreaming, reconnectAttempts, isReconnecting]);
 
   // Reset connection timeout - called when events are received
   const resetConnectionTimeout = useCallback(() => {
@@ -103,9 +100,13 @@ export function useDebateFlow({ run, onLayoutChange }: UseDebateFlowOptions) {
         return;
       }
 
+      // Increment attempts at the start so UI shows correct attempt number
+      const attemptNumber = currentAttempts + 1;
+      setReconnectAttempts(attemptNumber);
       setIsReconnecting(true);
+
       const delay = Math.pow(2, currentAttempts) * 1000; // 1s, 2s, 4s
-      console.log(`Reconnecting in ${delay}ms (attempt ${currentAttempts + 1}/${MAX_RECONNECT_ATTEMPTS})`);
+      console.log(`Reconnecting in ${delay}ms (attempt ${attemptNumber}/${MAX_RECONNECT_ATTEMPTS})`);
 
       await new Promise((resolve) => setTimeout(resolve, delay));
 
@@ -115,11 +116,12 @@ export function useDebateFlow({ run, onLayoutChange }: UseDebateFlowOptions) {
         return;
       }
 
-      setReconnectAttempts((prev) => prev + 1);
       setIsReconnecting(false);
 
-      // Restart the stream
-      startStreamInternal(runId, true);
+      // Restart the stream using ref to avoid circular dependency
+      if (startStreamInternalRef.current) {
+        startStreamInternalRef.current(runId, true);
+      }
     },
     []
   );
@@ -495,6 +497,11 @@ export function useDebateFlow({ run, onLayoutChange }: UseDebateFlowOptions) {
     },
     [handlePhaseStart, handleToken, handlePhaseEnd, handleScore, handleVerdict, resetConnectionTimeout, attemptReconnect]
   );
+
+  // Sync ref to break circular dependency with attemptReconnect
+  useEffect(() => {
+    startStreamInternalRef.current = startStreamInternal;
+  }, [startStreamInternal]);
 
   // Public start stream function
   const startStream = useCallback(

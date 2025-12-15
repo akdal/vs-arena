@@ -5,7 +5,7 @@
  * Shows real-time connection state with reconnection progress
  */
 
-import { Loader2, WifiOff, Wifi } from "lucide-react";
+import { Loader2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 interface ConnectionStatusProps {
@@ -28,8 +28,9 @@ export function ConnectionStatus({
   maxAttempts,
   className,
 }: ConnectionStatusProps) {
-  // Don't show anything when connected and not reconnecting
-  if (isConnected && !isReconnecting) return null;
+  // Only show when actively reconnecting
+  // Don't show "Disconnected" when stream hasn't started or completed normally
+  if (!isReconnecting) return null;
 
   return (
     <div
@@ -43,24 +44,10 @@ export function ConnectionStatus({
       role="status"
       aria-live="polite"
     >
-      {isReconnecting ? (
-        <>
-          <Loader2 className="h-4 w-4 animate-spin text-yellow-500" />
-          <span className="text-yellow-600 dark:text-yellow-400">
-            Reconnecting ({reconnectAttempts}/{maxAttempts})...
-          </span>
-        </>
-      ) : !isConnected ? (
-        <>
-          <WifiOff className="h-4 w-4 text-red-500 animate-pulse" />
-          <span className="text-red-600 dark:text-red-400">Disconnected</span>
-        </>
-      ) : (
-        <>
-          <Wifi className="h-4 w-4 text-green-500" />
-          <span className="text-green-600 dark:text-green-400">Connected</span>
-        </>
-      )}
+      <Loader2 className="h-4 w-4 animate-spin text-yellow-500" />
+      <span className="text-yellow-600 dark:text-yellow-400">
+        Reconnecting ({reconnectAttempts}/{maxAttempts})...
+      </span>
     </div>
   );
 }
