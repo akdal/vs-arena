@@ -112,6 +112,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
     - VerdictPanel and ScoreCard integration
 
 ### Fixed
+- **Phase 2.5 Code Cleanup**:
+  - Removed unused PHASE_LABELS import from score-card.tsx
 - **Phase 2.1 Critical Issues** (from code-validator agent):
   - SSE streaming integration: useDebateFlow now manages its own SSE connection
   - Edge components now use proper EdgeProps type instead of `any`
@@ -539,6 +541,7 @@ Arena UI 개선 - 레이아웃 컴포넌트, 턴 인디케이터, 사이드 패�
 **Commits**:
 - `16827d7` Phase 2.3: Arena UI complete
 - `bb4e8a8` Phase 2.3: Code quality improvements from validator
+- `460052d` docs: Update documentation for Phase 2.3 completion
 
 ---
 
@@ -599,6 +602,10 @@ Judging System Frontend 구현 - 점수 카드, 판정 패널, SSE 이벤트 처
 - `/frontend/components/arena/action-side-panel/index.tsx` - 4탭 구조로 수정
 - `/frontend/components/arena/index.ts` - export 추가
 - `/frontend/components/debate/debate-stream-view.tsx` - 점수/판정 파싱 및 통합
+
+**Commits**:
+- `2ec4701` Phase 2.5: Judging System Frontend complete
+- `ad64c1c` fix: Remove unused PHASE_LABELS import from score-card
 
 ---
 

@@ -220,11 +220,9 @@ Tables:
 - React Flow visualization (custom nodes/edges, Dagre layout)
 - Animation & UX (typing effect, node glow, edge flow, auto-scroll)
 - Arena UI (layout, turn indicator, side panel with scores/progress/log)
+- Judging System Frontend (ScoreCard, VerdictPanel, VerdictDisplay)
 
-### In Progress (Phase 2 - M2)
-- Judging System Frontend (ScoreCard, VerdictPanel)
-
-### Planned
+### Planned (Phase 3-4)
 - Phase 3: Replay, rule violation detection, character showcase
 - Phase 4: Testing, performance optimization, documentation
 
