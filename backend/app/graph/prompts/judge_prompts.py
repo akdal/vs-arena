@@ -44,7 +44,9 @@ Provide your introduction:"""
 def build_scoring_prompt_opening(
     turn_content: str,
     rubric: Dict[str, Any],
-    agent_name: str
+    agent_name: str,
+    forbidden_phrases: List[str] = None,
+    detected_violations: List[Dict[str, str]] = None
 ) -> str:
     """
     Generate scoring prompt for opening arguments.
@@ -53,15 +55,39 @@ def build_scoring_prompt_opening(
         turn_content: Opening argument text
         rubric: Scoring weights configuration
         agent_name: Name of the agent being scored
+        forbidden_phrases: List of phrases the agent should not use
+        detected_violations: Pre-detected forbidden phrase violations
 
     Returns:
         Formatted prompt string
     """
+    # Build forbidden phrases section if violations detected
+    violation_section = ""
+    if detected_violations:
+        violation_list = "\n".join([
+            f"  - \"{v['phrase']}\" found in: {v['context']}"
+            for v in detected_violations
+        ])
+        violation_section = f"""
+
+**FORBIDDEN PHRASE VIOLATIONS DETECTED:**
+The following forbidden phrases were detected in this argument:
+{violation_list}
+
+Apply a -2 point penalty for EACH violation detected ({len(detected_violations)} violations = -{len(detected_violations) * 2} points).
+"""
+    elif forbidden_phrases:
+        violation_section = f"""
+
+**Note:** This agent has forbidden phrases: {', '.join(forbidden_phrases)}
+No violations were detected in this argument.
+"""
+
     return f"""You are scoring {agent_name}'s opening argument.
 
 === OPENING ARGUMENT ===
 {turn_content}
-
+{violation_section}
 Scoring Criteria (0-10 for each sub-criterion):
 
 **Argumentation ({rubric.get('argumentation_weight', 35)}%)**
@@ -75,6 +101,7 @@ Scoring Criteria (0-10 for each sub-criterion):
 
 **Strategy ({rubric.get('strategy_weight', 15)}%)**
 - Position Setup (0-10): Clarity of position framework
+- Forbidden Phrase Penalty: -2 per violation (if any)
 
 Provide your scores in this exact JSON format:
 {{
@@ -88,9 +115,11 @@ Provide your scores in this exact JSON format:
         "structure": <0-10>
     }},
     "strategy": {{
-        "position_setup": <0-10>
+        "position_setup": <0-10>,
+        "forbidden_phrase_penalty": <0 or negative multiple of 2>
     }},
-    "total": <calculated sum>,
+    "total": <calculated sum including penalty>,
+    "forbidden_phrases_detected": [<list of detected phrases or empty>],
     "justification": "<brief 1-2 sentence explanation>"
 }}
 
@@ -101,7 +130,9 @@ def build_scoring_prompt_rebuttal(
     turn_content: str,
     rubric: Dict[str, Any],
     agent_name: str,
-    opponent_opening: str
+    opponent_opening: str,
+    forbidden_phrases: List[str] = None,
+    detected_violations: List[Dict[str, str]] = None
 ) -> str:
     """
     Generate scoring prompt for rebuttal arguments.
@@ -111,10 +142,34 @@ def build_scoring_prompt_rebuttal(
         rubric: Scoring weights configuration
         agent_name: Name of the agent being scored
         opponent_opening: Opponent's opening for context
+        forbidden_phrases: List of phrases the agent should not use
+        detected_violations: Pre-detected forbidden phrase violations
 
     Returns:
         Formatted prompt string
     """
+    # Build forbidden phrases section if violations detected
+    violation_section = ""
+    if detected_violations:
+        violation_list = "\n".join([
+            f"  - \"{v['phrase']}\" found in: {v['context']}"
+            for v in detected_violations
+        ])
+        violation_section = f"""
+
+**FORBIDDEN PHRASE VIOLATIONS DETECTED:**
+The following forbidden phrases were detected in this rebuttal:
+{violation_list}
+
+Apply a -2 point penalty for EACH violation detected ({len(detected_violations)} violations = -{len(detected_violations) * 2} points).
+"""
+    elif forbidden_phrases:
+        violation_section = f"""
+
+**Note:** This agent has forbidden phrases: {', '.join(forbidden_phrases)}
+No violations were detected in this rebuttal.
+"""
+
     return f"""You are scoring {agent_name}'s rebuttal.
 
 === OPPONENT'S OPENING (FOR REFERENCE) ===
@@ -122,7 +177,7 @@ def build_scoring_prompt_rebuttal(
 
 === REBUTTAL TO SCORE ===
 {turn_content}
-
+{violation_section}
 Scoring Criteria (0-10 for each sub-criterion):
 
 **Rebuttal ({rubric.get('rebuttal_weight', 30)}%)**
@@ -135,6 +190,9 @@ Scoring Criteria (0-10 for each sub-criterion):
 
 **Delivery ({rubric.get('delivery_weight', 20)}%)**
 - Clarity (0-10): Clear refutation logic
+
+**Penalties:**
+- Forbidden Phrase Penalty: -2 per violation (if any)
 
 Provide your scores in this exact JSON format:
 {{
@@ -149,7 +207,9 @@ Provide your scores in this exact JSON format:
     "delivery": {{
         "clarity": <0-10>
     }},
-    "total": <calculated sum>,
+    "forbidden_phrase_penalty": <0 or negative multiple of 2>,
+    "total": <calculated sum including penalty>,
+    "forbidden_phrases_detected": [<list of detected phrases or empty>],
     "justification": "<brief 1-2 sentence explanation>"
 }}
 
@@ -160,7 +220,9 @@ def build_scoring_prompt_summary(
     turn_content: str,
     rubric: Dict[str, Any],
     agent_name: str,
-    all_previous_turns: List[str]
+    all_previous_turns: List[str],
+    forbidden_phrases: List[str] = None,
+    detected_violations: List[Dict[str, str]] = None
 ) -> str:
     """
     Generate scoring prompt for summary arguments.
@@ -170,6 +232,8 @@ def build_scoring_prompt_summary(
         rubric: Scoring weights configuration
         agent_name: Name of the agent being scored
         all_previous_turns: All previous debate turns for new argument detection
+        forbidden_phrases: List of phrases the agent should not use
+        detected_violations: Pre-detected forbidden phrase violations
 
     Returns:
         Formatted prompt string
@@ -178,6 +242,28 @@ def build_scoring_prompt_summary(
         f"[Turn {i+1}] {turn}" for i, turn in enumerate(all_previous_turns)
     ])
 
+    # Build forbidden phrases section if violations detected
+    violation_section = ""
+    if detected_violations:
+        violation_list = "\n".join([
+            f"  - \"{v['phrase']}\" found in: {v['context']}"
+            for v in detected_violations
+        ])
+        violation_section = f"""
+
+**FORBIDDEN PHRASE VIOLATIONS DETECTED:**
+The following forbidden phrases were detected in this summary:
+{violation_list}
+
+Apply a -2 point penalty for EACH violation detected ({len(detected_violations)} violations = -{len(detected_violations) * 2} points).
+"""
+    elif forbidden_phrases:
+        violation_section = f"""
+
+**Note:** This agent has forbidden phrases: {', '.join(forbidden_phrases)}
+No violations were detected in this summary.
+"""
+
     return f"""You are scoring {agent_name}'s summary (Whip Speech).
 
 === PREVIOUS DEBATE TURNS ===
@@ -185,12 +271,13 @@ def build_scoring_prompt_summary(
 
 === SUMMARY TO SCORE ===
 {turn_content}
-
+{violation_section}
 Scoring Criteria (0-10 for each sub-criterion):
 
 **Strategy ({rubric.get('strategy_weight', 15)}%)**
 - Weighing (0-10): Quality of comparative analysis
 - New Argument Penalty: **-5 points if new arguments detected**
+- Forbidden Phrase Penalty: -2 per violation (if any)
 
 **Argumentation ({rubric.get('argumentation_weight', 35)}%)**
 - Synthesis (0-10): Coherence of overall case summary
@@ -204,7 +291,8 @@ Provide your scores in this exact JSON format:
 {{
     "strategy": {{
         "weighing": <0-10>,
-        "new_argument_penalty": <0 or -5>
+        "new_argument_penalty": <0 or -5>,
+        "forbidden_phrase_penalty": <0 or negative multiple of 2>
     }},
     "argumentation": {{
         "synthesis": <0-10>
@@ -212,8 +300,9 @@ Provide your scores in this exact JSON format:
     "delivery": {{
         "impact": <0-10>
     }},
-    "total": <calculated sum including penalty>,
+    "total": <calculated sum including ALL penalties>,
     "new_arguments_detected": <true/false>,
+    "forbidden_phrases_detected": [<list of detected phrases or empty>],
     "justification": "<brief 1-2 sentence explanation>"
 }}
 

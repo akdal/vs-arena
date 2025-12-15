@@ -17,7 +17,8 @@ from app.graph.prompts.judge_prompts import (
 from app.graph.nodes.utils import (
     call_ollama_with_retry,
     build_system_prompt,
-    parse_json_scores
+    parse_json_scores,
+    detect_forbidden_phrases
 )
 
 logger = logging.getLogger(__name__)
@@ -84,10 +85,19 @@ async def score_opening_a(state: DebateState) -> DebateState:
     if not opening_turn:
         raise ValueError("opening_a turn not found in state - execution order may be corrupted")
 
+    # Detect forbidden phrase violations
+    forbidden_phrases = agent_a["persona_json"].get("forbidden_phrases", [])
+    violations = detect_forbidden_phrases(opening_turn["content"], forbidden_phrases)
+
+    if violations:
+        logger.info(f"Detected {len(violations)} forbidden phrase violations in opening_a")
+
     prompt = build_scoring_prompt_opening(
         turn_content=opening_turn["content"],
         rubric=state["rubric"],
-        agent_name=agent_a["name"]
+        agent_name=agent_a["name"],
+        forbidden_phrases=forbidden_phrases,
+        detected_violations=violations
     )
 
     logger.info(f"Scoring opening_a")
@@ -123,6 +133,7 @@ async def score_opening_a(state: DebateState) -> DebateState:
     for turn in state["turns"]:
         if turn["turn_id"] == opening_turn["turn_id"]:
             turn["metadata"]["scores"] = scores
+            turn["metadata"]["forbidden_phrases_detected"] = violations
             break
 
     return {
@@ -141,10 +152,19 @@ async def score_opening_b(state: DebateState) -> DebateState:
     if not opening_turn:
         raise ValueError("opening_b turn not found in state - execution order may be corrupted")
 
+    # Detect forbidden phrase violations
+    forbidden_phrases = agent_b["persona_json"].get("forbidden_phrases", [])
+    violations = detect_forbidden_phrases(opening_turn["content"], forbidden_phrases)
+
+    if violations:
+        logger.info(f"Detected {len(violations)} forbidden phrase violations in opening_b")
+
     prompt = build_scoring_prompt_opening(
         turn_content=opening_turn["content"],
         rubric=state["rubric"],
-        agent_name=agent_b["name"]
+        agent_name=agent_b["name"],
+        forbidden_phrases=forbidden_phrases,
+        detected_violations=violations
     )
 
     logger.info(f"Scoring opening_b")
@@ -177,6 +197,7 @@ async def score_opening_b(state: DebateState) -> DebateState:
     for turn in state["turns"]:
         if turn["turn_id"] == opening_turn["turn_id"]:
             turn["metadata"]["scores"] = scores
+            turn["metadata"]["forbidden_phrases_detected"] = violations
             break
 
     return {
@@ -199,11 +220,20 @@ async def score_rebuttal_a(state: DebateState) -> DebateState:
     if not opening_b_turn:
         raise ValueError("opening_b turn not found in state - execution order may be corrupted")
 
+    # Detect forbidden phrase violations
+    forbidden_phrases = agent_a["persona_json"].get("forbidden_phrases", [])
+    violations = detect_forbidden_phrases(rebuttal_turn["content"], forbidden_phrases)
+
+    if violations:
+        logger.info(f"Detected {len(violations)} forbidden phrase violations in rebuttal_a")
+
     prompt = build_scoring_prompt_rebuttal(
         turn_content=rebuttal_turn["content"],
         rubric=state["rubric"],
         agent_name=agent_a["name"],
-        opponent_opening=opening_b_turn["content"]
+        opponent_opening=opening_b_turn["content"],
+        forbidden_phrases=forbidden_phrases,
+        detected_violations=violations
     )
 
     logger.info(f"Scoring rebuttal_a")
@@ -235,6 +265,7 @@ async def score_rebuttal_a(state: DebateState) -> DebateState:
     for turn in state["turns"]:
         if turn["turn_id"] == rebuttal_turn["turn_id"]:
             turn["metadata"]["scores"] = scores
+            turn["metadata"]["forbidden_phrases_detected"] = violations
             break
 
     return {
@@ -257,11 +288,20 @@ async def score_rebuttal_b(state: DebateState) -> DebateState:
     if not opening_a_turn:
         raise ValueError("opening_a turn not found in state - execution order may be corrupted")
 
+    # Detect forbidden phrase violations
+    forbidden_phrases = agent_b["persona_json"].get("forbidden_phrases", [])
+    violations = detect_forbidden_phrases(rebuttal_turn["content"], forbidden_phrases)
+
+    if violations:
+        logger.info(f"Detected {len(violations)} forbidden phrase violations in rebuttal_b")
+
     prompt = build_scoring_prompt_rebuttal(
         turn_content=rebuttal_turn["content"],
         rubric=state["rubric"],
         agent_name=agent_b["name"],
-        opponent_opening=opening_a_turn["content"]
+        opponent_opening=opening_a_turn["content"],
+        forbidden_phrases=forbidden_phrases,
+        detected_violations=violations
     )
 
     logger.info(f"Scoring rebuttal_b")
@@ -292,6 +332,7 @@ async def score_rebuttal_b(state: DebateState) -> DebateState:
     for turn in state["turns"]:
         if turn["turn_id"] == rebuttal_turn["turn_id"]:
             turn["metadata"]["scores"] = scores
+            turn["metadata"]["forbidden_phrases_detected"] = violations
             break
 
     return {
@@ -313,11 +354,20 @@ async def score_summary_a(state: DebateState) -> DebateState:
     # Get all previous debate turns (excluding judge turns)
     previous_turns = [t["content"] for t in state["turns"] if t["role"] == "debater" and t["phase"] != "summary_a"]
 
+    # Detect forbidden phrase violations
+    forbidden_phrases = agent_a["persona_json"].get("forbidden_phrases", [])
+    violations = detect_forbidden_phrases(summary_turn["content"], forbidden_phrases)
+
+    if violations:
+        logger.info(f"Detected {len(violations)} forbidden phrase violations in summary_a")
+
     prompt = build_scoring_prompt_summary(
         turn_content=summary_turn["content"],
         rubric=state["rubric"],
         agent_name=agent_a["name"],
-        all_previous_turns=previous_turns
+        all_previous_turns=previous_turns,
+        forbidden_phrases=forbidden_phrases,
+        detected_violations=violations
     )
 
     logger.info(f"Scoring summary_a")
@@ -326,7 +376,7 @@ async def score_summary_a(state: DebateState) -> DebateState:
         response = await call_ollama_with_retry(
             model=agent_j["model"],
             prompt=prompt,
-            system="You are a fair and objective debate judge. Check for new arguments. Provide scores in valid JSON format.",
+            system="You are a fair and objective debate judge. Check for new arguments and forbidden phrases. Provide scores in valid JSON format.",
             temperature=0.3,
             max_tokens=512,
             max_retries=3
@@ -350,6 +400,7 @@ async def score_summary_a(state: DebateState) -> DebateState:
         if turn["turn_id"] == summary_turn["turn_id"]:
             turn["metadata"]["scores"] = scores
             turn["metadata"]["new_arguments_detected"] = scores.get("new_arguments_detected", False)
+            turn["metadata"]["forbidden_phrases_detected"] = violations
             break
 
     return {
@@ -370,11 +421,20 @@ async def score_summary_b(state: DebateState) -> DebateState:
 
     previous_turns = [t["content"] for t in state["turns"] if t["role"] == "debater" and t["phase"] != "summary_b"]
 
+    # Detect forbidden phrase violations
+    forbidden_phrases = agent_b["persona_json"].get("forbidden_phrases", [])
+    violations = detect_forbidden_phrases(summary_turn["content"], forbidden_phrases)
+
+    if violations:
+        logger.info(f"Detected {len(violations)} forbidden phrase violations in summary_b")
+
     prompt = build_scoring_prompt_summary(
         turn_content=summary_turn["content"],
         rubric=state["rubric"],
         agent_name=agent_b["name"],
-        all_previous_turns=previous_turns
+        all_previous_turns=previous_turns,
+        forbidden_phrases=forbidden_phrases,
+        detected_violations=violations
     )
 
     logger.info(f"Scoring summary_b")
@@ -383,7 +443,7 @@ async def score_summary_b(state: DebateState) -> DebateState:
         response = await call_ollama_with_retry(
             model=agent_j["model"],
             prompt=prompt,
-            system="You are a fair and objective debate judge. Check for new arguments. Provide scores in valid JSON format.",
+            system="You are a fair and objective debate judge. Check for new arguments and forbidden phrases. Provide scores in valid JSON format.",
             temperature=0.3,
             max_tokens=512,
             max_retries=3
@@ -406,6 +466,7 @@ async def score_summary_b(state: DebateState) -> DebateState:
         if turn["turn_id"] == summary_turn["turn_id"]:
             turn["metadata"]["scores"] = scores
             turn["metadata"]["new_arguments_detected"] = scores.get("new_arguments_detected", False)
+            turn["metadata"]["forbidden_phrases_detected"] = violations
             break
 
     return {

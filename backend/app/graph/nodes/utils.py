@@ -3,7 +3,7 @@ Utility functions for debate nodes
 """
 import asyncio
 import logging
-from typing import AsyncGenerator, Dict, Any
+from typing import AsyncGenerator, Dict, Any, List
 import httpx
 
 from app.services.ollama import stream_ollama, call_ollama
@@ -228,3 +228,44 @@ def parse_json_scores(response: str, default_score: int = 7) -> Dict[str, Any]:
         "total": default_score * 6,
         "justification": "Score parsing failed, using default values"
     }
+
+
+def detect_forbidden_phrases(content: str, forbidden_phrases: List[str]) -> List[Dict[str, str]]:
+    """
+    Detect forbidden phrases in content using case-insensitive matching.
+
+    Args:
+        content: Text content to check
+        forbidden_phrases: List of phrases to detect
+
+    Returns:
+        List of violations with phrase and context
+    """
+    violations = []
+    if not forbidden_phrases:
+        return violations
+
+    content_lower = content.lower()
+
+    for phrase in forbidden_phrases:
+        phrase_lower = phrase.lower()
+        # Find all occurrences
+        start_idx = 0
+        while True:
+            idx = content_lower.find(phrase_lower, start_idx)
+            if idx == -1:
+                break
+
+            # Extract context around the phrase (30 chars before and after)
+            context_start = max(0, idx - 30)
+            context_end = min(len(content), idx + len(phrase) + 30)
+            context = content[context_start:context_end]
+
+            violations.append({
+                "phrase": phrase,
+                "context": f"...{context}..."
+            })
+
+            start_idx = idx + 1  # Move past this occurrence
+
+    return violations

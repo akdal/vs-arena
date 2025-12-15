@@ -46,6 +46,26 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - 5-second auto-dismiss duration for all error toasts
   - Inline error displays kept as backup
 
+- **Rule Violation Detection**: Forbidden phrase and new argument detection (Phase 3.2)
+  - Hybrid detection approach:
+    - Rule-based string matching for forbidden phrases
+    - LLM-based detection for new arguments in Summary
+  - Utility function `detect_forbidden_phrases()` in utils.py:
+    - Case-insensitive matching
+    - Context extraction (30 chars before/after)
+    - Multiple occurrence detection
+  - Updated Judge scoring prompts:
+    - `build_scoring_prompt_opening()`: forbidden_phrases parameter
+    - `build_scoring_prompt_rebuttal()`: forbidden_phrases parameter
+    - `build_scoring_prompt_summary()`: forbidden + new arguments
+  - All 6 scoring nodes updated:
+    - Detect violations before scoring
+    - Pass violations to Judge LLM prompt
+    - Store violations in turn metadata
+  - Penalty structure:
+    - -2 points per forbidden phrase violation
+    - -5 points for new arguments in Summary
+
 - **React Flow Visualization**: Complete graph-based debate visualization (Phase 2.1)
   - Flow types and TypeScript definitions
   - Custom node types:
@@ -861,6 +881,55 @@ React Flow를 사용한 debate 시각화 기본 구현 - 커스텀 노드/엣지
 - `/frontend/components/arena/turn-indicator.tsx` - mode prop 추가
 - `/frontend/components/arena/index.ts` - export 추가
 - `/frontend/lib/types.ts` - ReplaySpeed 타입 추가
+
+---
+
+### 2025-12-15: Phase 3.2 Rule Violation Detection 완료
+
+**목표 (Goal)**:
+BP Lite 토론 규칙 위반 감지 시스템 구현 - Forbidden Phrase 감지 및 Summary 새 논거 감지
+
+**구현 내용 (Implementation)**:
+
+1. **Hybrid Detection 접근법**:
+   - Rule-based: 문자열 매칭으로 forbidden phrases 사전 감지
+   - LLM-based: Summary에서 새 논거 감지는 Judge LLM에 위임
+   - Scoring-time detection: 발언 후 채점 시점에 위반 검사
+
+2. **detect_forbidden_phrases() 유틸리티** (backend/app/graph/nodes/utils.py):
+   - 대소문자 무시 문자열 매칭
+   - 위반 발견 시 전후 30자 컨텍스트 추출
+   - 다중 발생 감지 (같은 phrase가 여러 번 등장할 경우 모두 기록)
+   - 반환값: `[{"phrase": "...", "context": "...context..."}]`
+
+3. **Judge 채점 프롬프트 업데이트** (backend/app/graph/prompts/judge_prompts.py):
+   - `build_scoring_prompt_opening()`: forbidden_phrases, detected_violations 파라미터 추가
+   - `build_scoring_prompt_rebuttal()`: 동일하게 업데이트
+   - `build_scoring_prompt_summary()`: forbidden_phrases + 기존 new_arguments 감지 통합
+   - JSON 응답 구조에 `forbidden_phrase_penalty`, `forbidden_phrases_detected` 필드 추가
+
+4. **6개 채점 노드 업데이트** (backend/app/graph/nodes/judge.py):
+   - `score_opening_a`, `score_opening_b`: forbidden phrases 감지 및 프롬프트 전달
+   - `score_rebuttal_a`, `score_rebuttal_b`: 동일하게 업데이트
+   - `score_summary_a`, `score_summary_b`: forbidden + new_arguments 모두 처리
+   - 모든 노드에서 `turn["metadata"]["forbidden_phrases_detected"]`에 위반 저장
+
+5. **페널티 구조**:
+   - Forbidden phrase: -2점 per violation
+   - New arguments in Summary: -5점 (기존 로직 유지)
+   - 페널티는 Judge LLM이 total에 반영
+
+**결과 (Result)**:
+- Phase 3.2 완료로 Phase 3 (M3) 진행률 60% 달성
+- Persona의 forbidden_phrases 필드가 실제로 채점에 영향을 미침
+- Summary 단계에서 새 논거 제시 시 페널티 적용
+- 위반 정보가 turn metadata에 저장되어 추후 UI 표시 가능
+- Python 문법 검증 완료, 함수 테스트 성공
+
+**관련 파일 (Related Files)**:
+- `/backend/app/graph/nodes/utils.py` - detect_forbidden_phrases() 함수 추가
+- `/backend/app/graph/prompts/judge_prompts.py` - 3개 채점 프롬프트 업데이트
+- `/backend/app/graph/nodes/judge.py` - 6개 채점 노드 업데이트
 
 ---
 

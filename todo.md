@@ -263,13 +263,13 @@
 - [x] 완료된 Run에서만 Replay 모드 활성화
 
 ### 3.2 Rule Violation Detection
-- [ ] Summary 새 논거 감지
-  - [ ] 이전 발언에서 언급되지 않은 주장 추출
-  - [ ] Judge 프롬프트에 위반 여부 포함
-  - [ ] 페널티 자동 적용
-- [ ] Persona 금칙어 감지
-  - [ ] forbidden_phrases 매칭
-  - [ ] 위반 시 페널티
+- [x] Summary 새 논거 감지
+  - [x] 이전 발언에서 언급되지 않은 주장 추출 (LLM 기반)
+  - [x] Judge 프롬프트에 위반 여부 포함
+  - [x] 페널티 자동 적용 (-5 points)
+- [x] Persona 금칙어 감지
+  - [x] forbidden_phrases 매칭 (Rule-based + Hybrid)
+  - [x] 위반 시 페널티 (-2 per phrase)
 
 ### 3.3 Error Handling
 - [x] Ollama 연결 실패 처리
@@ -334,7 +334,7 @@
 | Phase 0: Setup | **Completed** | 95% |
 | Phase 1: M1 | **Completed** | 100% (Backend + Frontend Agent Module) |
 | Phase 2: M2 | **Completed** | 100% (2.1, 2.2, 2.3, 2.4, 2.5 완료) |
-| Phase 3: M3 | **In Progress** | 42% (3.1 Replay, 3.3 Error Handling 완료) |
+| Phase 3: M3 | **In Progress** | 60% (3.1, 3.2, 3.3 완료) |
 | Phase 4: Polish | Not Started | 0% |
 
 ---
