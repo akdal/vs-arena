@@ -19,6 +19,7 @@ export interface ActionSidePanelProps {
   currentPhase: DebatePhase | null;
   isOpen: boolean;
   onToggle: () => void;
+  replayTimeline?: React.ReactNode;
 }
 
 export const ActionSidePanel = memo(function ActionSidePanel({
@@ -27,6 +28,7 @@ export const ActionSidePanel = memo(function ActionSidePanel({
   currentPhase,
   isOpen,
   onToggle,
+  replayTimeline,
 }: ActionSidePanelProps) {
   const completedPhases = getCompletedPhases(currentPhase);
 
@@ -91,10 +93,14 @@ export const ActionSidePanel = memo(function ActionSidePanel({
               </TabsContent>
 
               <TabsContent value="progress" className="mt-4">
-                <ProgressIndicator
-                  currentPhase={currentPhase}
-                  completedPhases={completedPhases}
-                />
+                {replayTimeline ? (
+                  replayTimeline
+                ) : (
+                  <ProgressIndicator
+                    currentPhase={currentPhase}
+                    completedPhases={completedPhases}
+                  />
+                )}
               </TabsContent>
 
               <TabsContent value="log" className="mt-4">

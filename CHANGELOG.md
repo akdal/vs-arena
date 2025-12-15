@@ -8,6 +8,33 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- **Replay Feature**: Complete debate replay system for completed runs (Phase 3.1)
+  - Core replay hook (use-debate-replay.ts):
+    - Character-by-character streaming simulation
+    - Playback state management (playing, paused, phase index)
+    - Speed control support (0.5x, 1x, 2x)
+    - Graph state reconstruction from Turn data
+    - Phase navigation (previous, next, direct jump)
+  - Replay controls component (replay-controls.tsx):
+    - Play/Pause toggle button
+    - Speed selector dropdown (0.5x, 1x, 2x)
+    - Previous/Next phase buttons with disabled states
+    - Phase counter display (current/total)
+  - Replay timeline component (replay-timeline.tsx):
+    - Clickable phase segments for direct navigation
+    - Visual indicators for completed/current/pending phases
+    - Agent-colored phase markers (Blue/Red/Purple)
+  - Arena replay view component (arena-replay-view.tsx):
+    - Integration of replay controls and timeline
+    - React Flow canvas with reconstructed graph state
+    - Seamless transition from live to replay mode
+  - Arena page updates:
+    - Replay mode toggle (only for completed runs)
+    - useRunTurns hook integration
+    - Mode prop for TurnIndicator (live/replay)
+  - Type definitions:
+    - ReplaySpeed type added to lib/types.ts
+
 - **React Flow Visualization**: Complete graph-based debate visualization (Phase 2.1)
   - Flow types and TypeScript definitions
   - Custom node types:
@@ -705,6 +732,71 @@ React Flow를 사용한 debate 시각화 기본 구현 - 커스텀 노드/엣지
 - `/frontend/package.json`, `/frontend/package-lock.json` - @dagrejs/dagre 추가
 
 **Commit**: 5fc4e16 Phase 2.1: React Flow Basic Integration complete
+
+---
+
+### 2025-12-15: Phase 3.1 Replay Feature 완료
+
+**목표 (Goal)**:
+완료된 토론의 리플레이 기능 구현 - 재생 컨트롤, 속도 조절, 타임라인 네비게이션
+
+**구현 내용 (Implementation)**:
+
+1. **use-debate-replay 훅** (hooks/use-debate-replay.ts):
+   - 핵심 리플레이 상태 관리 (playing, currentPhaseIndex, displayedContent)
+   - 문자 단위 스트리밍 시뮬레이션 (requestAnimationFrame 기반)
+   - 속도 조절 지원 (0.5x: 60ms, 1x: 30ms, 2x: 15ms 간격)
+   - Turn 데이터로부터 그래프 상태 재구성
+   - Phase 네비게이션: goToPhase, goToPrevious, goToNext
+   - 자동 재생 및 수동 일시정지 기능
+
+2. **ReplayControls 컴포넌트** (components/arena/replay-controls.tsx):
+   - Play/Pause 토글 버튼 (Play/Pause 아이콘)
+   - 속도 선택 드롭다운 (Select 컴포넌트)
+   - Previous/Next 버튼 (ChevronLeft/ChevronRight 아이콘)
+   - 경계 조건에 따른 버튼 비활성화
+   - Phase 카운터 표시 (예: "3/14")
+
+3. **ReplayTimeline 컴포넌트** (components/arena/replay-timeline.tsx):
+   - 클릭 가능한 Phase 세그먼트
+   - 완료/현재/대기 상태 시각화
+   - Agent별 컬러 마커 (Blue/Red/Purple)
+   - 호버 효과 및 커서 포인터
+
+4. **ArenaReplayView 컴포넌트** (components/arena/arena-replay-view.tsx):
+   - ReplayControls + ReplayTimeline 통합
+   - React Flow 캔버스와 재구성된 그래프 상태 연동
+   - 리플레이 상태에 따른 노드/엣지 업데이트
+
+5. **Arena 페이지 업데이트** (app/debate/arena/[runId]/page.tsx):
+   - Replay 모드 토글 (완료된 Run에서만 활성화)
+   - useRunTurns 훅으로 Turn 데이터 로딩
+   - TurnIndicator에 mode prop 추가 (live/replay)
+   - 조건부 렌더링 (Live View vs Replay View)
+
+6. **타입 정의 업데이트** (lib/types.ts):
+   - ReplaySpeed 타입 추가: 0.5 | 1 | 2
+
+7. **컴포넌트 Export 업데이트** (components/arena/index.ts):
+   - ReplayControls, ReplayTimeline, ArenaReplayView export 추가
+
+**결과 (Result)**:
+- Phase 3.1 완료로 Phase 3 (M3) 진행률 20% 달성
+- 완료된 토론을 원하는 속도로 다시 볼 수 있음
+- 문자 단위 스트리밍으로 라이브 토론과 유사한 경험 제공
+- 타임라인 클릭으로 특정 단계로 즉시 이동 가능
+- TypeScript 빌드 성공
+
+**관련 파일 (Related Files)**:
+- `/frontend/hooks/use-debate-replay.ts` - 핵심 리플레이 훅 (신규)
+- `/frontend/components/arena/replay-controls.tsx` - 재생 컨트롤 (신규)
+- `/frontend/components/arena/replay-timeline.tsx` - 타임라인 (신규)
+- `/frontend/components/arena/arena-replay-view.tsx` - 리플레이 뷰 (신규)
+- `/frontend/app/debate/arena/[runId]/page.tsx` - 리플레이 모드 토글 추가
+- `/frontend/components/arena/action-side-panel/index.tsx` - replayTimeline prop 추가
+- `/frontend/components/arena/turn-indicator.tsx` - mode prop 추가
+- `/frontend/components/arena/index.ts` - export 추가
+- `/frontend/lib/types.ts` - ReplaySpeed 타입 추가
 
 ---
 

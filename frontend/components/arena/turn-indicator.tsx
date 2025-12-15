@@ -15,13 +15,16 @@ interface TurnIndicatorProps {
   currentPhase: DebatePhase | null;
   isStreaming: boolean;
   run: RunDetail;
+  mode?: "live" | "replay";
 }
 
 export const TurnIndicator = memo(function TurnIndicator({
   currentPhase,
   isStreaming,
   run,
+  mode = "live",
 }: TurnIndicatorProps) {
+  const isReplay = mode === "replay";
   const progress = getPhaseProgress(currentPhase);
   const currentAgent = currentPhase ? getPhaseAgent(currentPhase) : null;
   const currentPhaseIndex = currentPhase
@@ -60,7 +63,9 @@ export const TurnIndicator = memo(function TurnIndicator({
               {run.agent_a.name}
             </div>
             {isAgentAActive && (
-              <div className="text-muted-foreground mt-0.5">Speaking...</div>
+              <div className="text-muted-foreground mt-0.5">
+                {isReplay ? "Playing..." : "Speaking..."}
+              </div>
             )}
           </div>
         </div>
@@ -124,7 +129,9 @@ export const TurnIndicator = memo(function TurnIndicator({
               {run.agent_b.name}
             </div>
             {isAgentBActive && (
-              <div className="text-muted-foreground mt-0.5">Speaking...</div>
+              <div className="text-muted-foreground mt-0.5">
+                {isReplay ? "Playing..." : "Speaking..."}
+              </div>
             )}
           </div>
         </div>
@@ -149,7 +156,7 @@ export const TurnIndicator = memo(function TurnIndicator({
               <div className={agentStyles.judge.text}>Judge</div>
               {isStreaming && (
                 <div className="text-muted-foreground mt-0.5">
-                  Deliberating...
+                  {isReplay ? "Playing..." : "Deliberating..."}
                 </div>
               )}
             </div>

@@ -155,3 +155,6 @@ export interface Turn {
 export interface APIError {
   detail: string;
 }
+
+// Replay Types
+export type ReplaySpeed = 0.5 | 1 | 2;

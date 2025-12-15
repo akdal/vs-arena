@@ -253,11 +253,14 @@
 
 ### 3.1 Replay Feature
 - [x] `GET /api/debate/runs/{id}/turns` API (Phase 1.6에서 구현 완료)
-- [ ] Replay 모드 UI
-  - [ ] 재생/일시정지 컨트롤
-  - [ ] 속도 조절 (0.5x, 1x, 2x)
-  - [ ] 단계별 이동
-- [ ] 그래프 상태 복원
+- [x] Replay 모드 UI
+  - [x] 재생/일시정지 컨트롤
+  - [x] 속도 조절 (0.5x, 1x, 2x)
+  - [x] 단계별 이동 (Previous/Next)
+  - [x] 클릭 가능한 타임라인 (단계별 직접 이동)
+- [x] 그래프 상태 복원 (Turn 데이터 기반)
+- [x] 문자 단위 스트리밍 시뮬레이션
+- [x] 완료된 Run에서만 Replay 모드 활성화
 
 ### 3.2 Rule Violation Detection
 - [ ] Summary 새 논거 감지
@@ -331,7 +334,7 @@
 | Phase 0: Setup | **Completed** | 95% |
 | Phase 1: M1 | **Completed** | 100% (Backend + Frontend Agent Module) |
 | Phase 2: M2 | **Completed** | 100% (2.1, 2.2, 2.3, 2.4, 2.5 완료) |
-| Phase 3: M3 | Not Started | 0% |
+| Phase 3: M3 | **In Progress** | 20% (3.1 Replay Feature 완료) |
 | Phase 4: Polish | Not Started | 0% |
 
 ---

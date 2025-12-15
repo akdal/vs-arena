@@ -8,17 +8,17 @@
 import { useState } from "react";
 import { useParams } from "next/navigation";
 import Link from "next/link";
-import { useRun } from "@/hooks/use-debate";
+import { useRun, useRunTurns } from "@/hooks/use-debate";
 import { DebateStreamView } from "@/components/debate/debate-stream-view";
 import { FlowProvider } from "@/components/flow";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
-import { ArrowLeft, LayoutGrid, AlignLeft } from "lucide-react";
-import { ArenaFlowView } from "@/components/arena/arena-flow-view";
+import { ArrowLeft, LayoutGrid, AlignLeft, Play } from "lucide-react";
+import { ArenaFlowView, ArenaReplayView } from "@/components/arena";
 
-type ViewMode = "text" | "flow";
+type ViewMode = "text" | "flow" | "replay";
 
 export default function DebateArenaPage() {
   const params = useParams();
@@ -26,6 +26,10 @@ export default function DebateArenaPage() {
   const [viewMode, setViewMode] = useState<ViewMode>("text");
 
   const { data: run, isLoading, error } = useRun(runId);
+
+  // Fetch turns for replay mode
+  const { data: turns } = useRunTurns(viewMode === "replay" ? runId : null);
+  const isCompleted = run?.status === "completed";
 
   if (isLoading) {
     return (
@@ -121,6 +125,16 @@ export default function DebateArenaPage() {
               <LayoutGrid className="h-4 w-4 mr-2" />
               Flow
             </Button>
+            {isCompleted && (
+              <Button
+                variant={viewMode === "replay" ? "default" : "ghost"}
+                size="sm"
+                onClick={() => setViewMode("replay")}
+              >
+                <Play className="h-4 w-4 mr-2" />
+                Replay
+              </Button>
+            )}
           </div>
         </div>
         <h1 className="text-3xl font-bold mb-2">Debate Arena</h1>
@@ -166,17 +180,31 @@ export default function DebateArenaPage() {
   return (
     <div className="max-w-7xl mx-auto py-8">
       {/* View Content */}
-      {viewMode === "text" ? (
+      {viewMode === "text" && (
         <>
           {headerContent}
           <div className="mt-6">
             <DebateStreamView runId={runId} autoStart={true} />
           </div>
         </>
-      ) : (
+      )}
+      {viewMode === "flow" && (
         <FlowProvider>
           <ArenaFlowView run={run} autoStart={true} header={headerContent} />
         </FlowProvider>
+      )}
+      {viewMode === "replay" && turns && (
+        <FlowProvider>
+          <ArenaReplayView run={run} turns={turns} header={headerContent} />
+        </FlowProvider>
+      )}
+      {viewMode === "replay" && !turns && (
+        <>
+          {headerContent}
+          <div className="mt-6 flex items-center justify-center h-64">
+            <div className="text-muted-foreground">Loading replay data...</div>
+          </div>
+        </>
       )}
     </div>
   );
