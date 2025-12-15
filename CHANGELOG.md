@@ -77,6 +77,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Enhanced showcase page with drawer integration
   - Barrel exports for agent components
 
+- **Judge Fairness (Swap Test)**: Position bias detection system (Phase 3.6)
+  - Backend API endpoints:
+    - `POST /api/debate/runs/{id}/swap`: Create swap test from completed run
+    - `GET /api/debate/runs/{id}/compare/{swap_id}`: Compare original and swapped results
+  - Position bias analysis:
+    - Detects if same position wins both debates (bias)
+    - Detects if same agent wins both debates (no bias, skill difference)
+    - Handles DRAW cases as inconclusive
+  - Frontend components:
+    - SwapTestButton: Trigger swap test from completed Arena page
+    - SwapComparisonView: Visual comparison with bias analysis
+  - Arena page integration with URL param `?original=` for comparison
+  - Note: Consistency scoring excluded (individual debate variability is part of game nature)
+
 - **React Flow Visualization**: Complete graph-based debate visualization (Phase 2.1)
   - Flow types and TypeScript definitions
   - Custom node types:
@@ -892,6 +906,66 @@ React Flow를 사용한 debate 시각화 기본 구현 - 커스텀 노드/엣지
 - `/frontend/components/arena/turn-indicator.tsx` - mode prop 추가
 - `/frontend/components/arena/index.ts` - export 추가
 - `/frontend/lib/types.ts` - ReplaySpeed 타입 추가
+
+---
+
+### 2025-12-15: Phase 3.6 Judge Fairness (Swap Test) 완료
+
+**목표 (Goal)**:
+Position 교체 테스트를 통한 Judge 공정성 검증 시스템 구현 (일관성 점수 제외)
+
+**구현 내용 (Implementation)**:
+
+1. **Backend API 엔드포인트** (backend/app/api/endpoints/debate.py):
+   - `POST /runs/{id}/swap`: 완료된 Run의 Position 교체하여 새 토론 생성
+   - `GET /runs/{id}/compare/{swap_id}`: 두 Run 비교 및 편향 분석
+   - `_analyze_position_bias()`: Position 편향 감지 로직
+
+2. **Frontend API Client 업데이트** (frontend/lib/api-client.ts):
+   - `createSwapTest()`: Swap Test 생성 API 호출
+   - `getSwapComparison()`: 비교 결과 조회
+   - 타입 정의: `BiasAnalysis`, `RunComparison`, `SwapComparisonResponse`
+
+3. **Hooks 추가** (frontend/hooks/use-debate.ts):
+   - `useCreateSwapTest()`: Swap Test 생성 mutation
+   - `useSwapComparison()`: 비교 결과 조회 query
+
+4. **SwapTestButton 컴포넌트** (frontend/components/arena/swap-test-button.tsx):
+   - 완료된 Run에서만 표시
+   - 클릭 시 새 토론 생성 및 Arena 페이지로 이동
+   - URL에 `?original=` 파라미터로 원본 Run ID 전달
+
+5. **SwapComparisonView 컴포넌트** (frontend/components/arena/swap-comparison-view.tsx):
+   - Original vs Swapped 결과 비교 그리드
+   - Position 편향 분석 결과 표시 (bias/none/inconclusive)
+   - 색상 코딩: 녹색(no bias), 노란색(bias), 회색(inconclusive)
+
+6. **Arena 페이지 통합** (frontend/app/debate/arena/[runId]/page.tsx):
+   - `useSearchParams`로 `?original=` 파라미터 처리
+   - SwapTestButton 헤더에 추가
+   - SwapComparisonView 페이지 하단에 조건부 표시
+
+**편향 분석 로직**:
+- 같은 Position이 두 번 다 승리 → Position 편향 감지
+- 다른 Position이 승리 (같은 Agent 승리) → 편향 없음 (실력 차이)
+- DRAW 포함 시 → 결론 불가
+
+**제외 사항**:
+- 일관성 점수 계산 (개별 토론의 가변성은 게임성의 일부로 유지)
+
+**결과 (Result)**:
+- Phase 3 (M3) 100% 완료
+- Position 교체 후 재실행으로 Judge 공정성 검증 가능
+- 시각적 비교 리포트로 편향 여부 즉시 확인
+- TypeScript 빌드 성공
+
+**관련 파일 (Related Files)**:
+- `/backend/app/api/endpoints/debate.py` - Swap Test 및 Compare 엔드포인트 추가
+- `/frontend/lib/api-client.ts` - API 함수 및 타입 추가
+- `/frontend/hooks/use-debate.ts` - Hooks 추가
+- `/frontend/components/arena/swap-test-button.tsx` - 신규
+- `/frontend/components/arena/swap-comparison-view.tsx` - 신규
+- `/frontend/app/debate/arena/[runId]/page.tsx` - 통합
 
 ---
 

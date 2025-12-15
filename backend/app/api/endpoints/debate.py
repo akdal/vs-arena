@@ -216,3 +216,155 @@ async def delete_run_endpoint(run_id: UUID, db: AsyncSession = Depends(get_db)):
             status_code=status.HTTP_404_NOT_FOUND,
             detail=f"Run {run_id} not found"
         )
+
+
+@router.post("/runs/{run_id}/swap", status_code=status.HTTP_201_CREATED, response_model=DebateStartResponse)
+async def create_swap_test(
+    run_id: UUID,
+    db: AsyncSession = Depends(get_db)
+) -> DebateStartResponse:
+    """
+    Create a swap test from a completed run.
+
+    Swaps agent positions (A becomes B, B becomes A) while keeping
+    the same topic, judge, and configuration. This helps detect
+    position bias in the judge.
+    """
+    original = await get_run_by_id(db, run_id)
+
+    if not original:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"Run {run_id} not found"
+        )
+
+    if original.status != "completed":
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Can only create swap test from completed runs"
+        )
+
+    # Create swapped run: Agent A ↔ B, Position A ↔ B
+    swapped = await create_run(
+        db=db,
+        topic=original.topic,
+        agent_a_id=original.agent_b_id,    # B → A
+        agent_b_id=original.agent_a_id,    # A → B
+        agent_j_id=original.agent_j_id,    # Judge unchanged
+        position_a=original.position_b,    # B's position → A
+        position_b=original.position_a,    # A's position → B
+        config=original.config_json,
+        rubric=original.rubric_json
+    )
+
+    return DebateStartResponse(
+        run_id=str(swapped.run_id),
+        status="pending",
+        stream_url=f"/api/debate/stream/{swapped.run_id}"
+    )
+
+
+def _analyze_position_bias(original: dict, swapped: dict) -> dict:
+    """
+    Analyze position bias between original and swapped runs.
+
+    Cases:
+    - Same agent wins both → Agent skill difference (no bias)
+    - Same position wins both → Position bias detected
+    """
+    orig_result = original["run"].result_json or {}
+    swap_result = swapped["run"].result_json or {}
+
+    orig_winner = orig_result.get("winner")  # "A", "B", or "DRAW"
+    swap_winner = swap_result.get("winner")
+
+    # Handle DRAW cases
+    if orig_winner == "DRAW" or swap_winner == "DRAW":
+        return {
+            "bias_type": "inconclusive",
+            "biased_toward": None,
+            "description": "One or both debates ended in a draw. Cannot determine bias."
+        }
+
+    # Determine which position won in each run
+    orig_winning_position = original["run"].position_a if orig_winner == "A" else original["run"].position_b
+    swap_winning_position = swapped["run"].position_a if swap_winner == "A" else swapped["run"].position_b
+
+    if orig_winning_position == swap_winning_position:
+        # Same position won both times → position bias
+        return {
+            "bias_type": "position",
+            "biased_toward": orig_winning_position,
+            "description": f"Position '{orig_winning_position}' won in both runs. Judge may be biased toward this position."
+        }
+    else:
+        # Different positions won → same agent won both (no position bias)
+        return {
+            "bias_type": "none",
+            "biased_toward": None,
+            "description": "Different positions won in each run. Results suggest agent skill difference rather than position bias."
+        }
+
+
+@router.get("/runs/{run_id}/compare/{swap_run_id}")
+async def compare_swap_test(
+    run_id: UUID,
+    swap_run_id: UUID,
+    db: AsyncSession = Depends(get_db)
+):
+    """
+    Compare original run with its swap test to detect position bias.
+
+    Returns both runs' details and bias analysis.
+    """
+    original = await get_run_with_agents(db, run_id)
+    swapped = await get_run_with_agents(db, swap_run_id)
+
+    if not original:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"Original run {run_id} not found"
+        )
+
+    if not swapped:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"Swapped run {swap_run_id} not found"
+        )
+
+    # Check both runs are completed
+    if original["run"].status != "completed" or swapped["run"].status != "completed":
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Both runs must be completed for comparison"
+        )
+
+    # Analyze bias
+    analysis = _analyze_position_bias(original, swapped)
+
+    orig_result = original["run"].result_json or {}
+    swap_result = swapped["run"].result_json or {}
+
+    return {
+        "original": {
+            "run_id": str(original["run"].run_id),
+            "agent_a": original["agent_a"],
+            "agent_b": original["agent_b"],
+            "position_a": original["run"].position_a,
+            "position_b": original["run"].position_b,
+            "winner": orig_result.get("winner"),
+            "scores_a": orig_result.get("scores_a"),
+            "scores_b": orig_result.get("scores_b"),
+        },
+        "swapped": {
+            "run_id": str(swapped["run"].run_id),
+            "agent_a": swapped["agent_a"],
+            "agent_b": swapped["agent_b"],
+            "position_a": swapped["run"].position_a,
+            "position_b": swapped["run"].position_b,
+            "winner": swap_result.get("winner"),
+            "scores_a": swap_result.get("scores_a"),
+            "scores_b": swap_result.get("scores_b"),
+        },
+        "analysis": analysis
+    }

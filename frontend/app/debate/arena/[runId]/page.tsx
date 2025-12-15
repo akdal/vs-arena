@@ -6,7 +6,7 @@
  */
 
 import { useState } from "react";
-import { useParams } from "next/navigation";
+import { useParams, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { useRun, useRunTurns } from "@/hooks/use-debate";
 import { DebateStreamView } from "@/components/debate/debate-stream-view";
@@ -17,12 +17,16 @@ import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { ArrowLeft, LayoutGrid, AlignLeft, Play } from "lucide-react";
 import { ArenaFlowView, ArenaReplayView } from "@/components/arena";
+import { SwapTestButton } from "@/components/arena/swap-test-button";
+import { SwapComparisonView } from "@/components/arena/swap-comparison-view";
 
 type ViewMode = "text" | "flow" | "replay";
 
 export default function DebateArenaPage() {
   const params = useParams();
+  const searchParams = useSearchParams();
   const runId = params.runId as string;
+  const originalRunId = searchParams.get("original"); // For swap test comparison
   const [viewMode, setViewMode] = useState<ViewMode>("text");
 
   const { data: run, isLoading, error } = useRun(runId);
@@ -30,6 +34,9 @@ export default function DebateArenaPage() {
   // Fetch turns for replay mode
   const { data: turns } = useRunTurns(viewMode === "replay" ? runId : null);
   const isCompleted = run?.status === "completed";
+
+  // Show comparison when this is a swap test run and both runs are completed
+  const showComparison = originalRunId && isCompleted;
 
   if (isLoading) {
     return (
@@ -105,6 +112,10 @@ export default function DebateArenaPage() {
             <Badge variant={run.status === "completed" ? "default" : "secondary"}>
               {run.status}
             </Badge>
+            {/* Swap Test Button - only show for completed runs without original */}
+            {isCompleted && !originalRunId && (
+              <SwapTestButton runId={runId} isCompleted={isCompleted} />
+            )}
           </div>
 
           {/* View Mode Toggle */}
@@ -205,6 +216,16 @@ export default function DebateArenaPage() {
             <div className="text-muted-foreground">Loading replay data...</div>
           </div>
         </>
+      )}
+
+      {/* Swap Test Comparison - shown when this is a swap test result */}
+      {showComparison && (
+        <div className="mt-6">
+          <SwapComparisonView
+            originalRunId={originalRunId}
+            swapRunId={runId}
+          />
+        </div>
       )}
     </div>
   );

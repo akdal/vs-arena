@@ -181,3 +181,59 @@ export async function deleteRun(runId: string): Promise<void> {
     method: "DELETE",
   });
 }
+
+/**
+ * Create a swap test from a completed run
+ * Swaps agent positions to detect position bias
+ */
+export async function createSwapTest(
+  runId: string
+): Promise<DebateStartResponse> {
+  return fetchAPI<DebateStartResponse>(`/debate/runs/${runId}/swap`, {
+    method: "POST",
+  });
+}
+
+/**
+ * Bias analysis result from swap test comparison
+ */
+export interface BiasAnalysis {
+  bias_type: "position" | "none" | "inconclusive";
+  biased_toward: "FOR" | "AGAINST" | null;
+  description: string;
+}
+
+/**
+ * Run comparison data for swap test
+ */
+export interface RunComparison {
+  run_id: string;
+  agent_a: Agent;
+  agent_b: Agent;
+  position_a: "FOR" | "AGAINST";
+  position_b: "FOR" | "AGAINST";
+  winner: "A" | "B" | "DRAW" | null;
+  scores_a: Record<string, number> | null;
+  scores_b: Record<string, number> | null;
+}
+
+/**
+ * Swap test comparison response
+ */
+export interface SwapComparisonResponse {
+  original: RunComparison;
+  swapped: RunComparison;
+  analysis: BiasAnalysis;
+}
+
+/**
+ * Compare original run with its swap test
+ */
+export async function getSwapComparison(
+  runId: string,
+  swapRunId: string
+): Promise<SwapComparisonResponse> {
+  return fetchAPI<SwapComparisonResponse>(
+    `/debate/runs/${runId}/compare/${swapRunId}`
+  );
+}

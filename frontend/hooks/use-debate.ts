@@ -11,6 +11,8 @@ import {
   getRun,
   getRunTurns,
   deleteRun,
+  createSwapTest,
+  getSwapComparison,
 } from "@/lib/api-client";
 
 // Query Keys
@@ -81,5 +83,34 @@ export function useDeleteRun() {
       // Invalidate runs list to refetch
       queryClient.invalidateQueries({ queryKey: debateKeys.runsList() });
     },
+  });
+}
+
+/**
+ * Create a swap test from a completed run
+ * Swaps agent positions to detect position bias
+ */
+export function useCreateSwapTest() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (runId: string) => createSwapTest(runId),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: debateKeys.runsList() });
+    },
+  });
+}
+
+/**
+ * Fetch swap test comparison between two runs
+ */
+export function useSwapComparison(
+  originalRunId: string | null,
+  swapRunId: string | null
+) {
+  return useQuery({
+    queryKey: ["swap-comparison", originalRunId, swapRunId] as const,
+    queryFn: () => getSwapComparison(originalRunId!, swapRunId!),
+    enabled: !!originalRunId && !!swapRunId,
   });
 }

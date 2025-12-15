@@ -292,10 +292,10 @@
 - [x] Clone 버튼 UI (AgentCard에 구현 완료 - Phase 1.8)
 
 ### 3.6 Judge Fairness (Swap Test)
-- [ ] Swap Test 실행 API
-- [ ] Position 교체 후 재실행
-- [ ] 결과 비교 리포트
-- [ ] 일관성 점수 계산
+- [x] Swap Test 실행 API (`POST /api/debate/runs/{id}/swap`)
+- [x] Position 교체 후 재실행 (Agent A ↔ B, Position A ↔ B)
+- [x] 결과 비교 리포트 (`GET /api/debate/runs/{id}/compare/{swap_id}`)
+- [x] Position 편향 분석 (일관성 점수 제외 - 게임성 유지)
 
 ---
 
@@ -334,7 +334,7 @@
 | Phase 0: Setup | **Completed** | 95% |
 | Phase 1: M1 | **Completed** | 100% (Backend + Frontend Agent Module) |
 | Phase 2: M2 | **Completed** | 100% (2.1, 2.2, 2.3, 2.4, 2.5 완료) |
-| Phase 3: M3 | **In Progress** | 83% (3.1-3.5 완료, 3.6 남음) |
+| Phase 3: M3 | **Completed** | 100% (3.1-3.6 완료) |
 | Phase 4: Polish | Not Started | 0% |
 
 ---
