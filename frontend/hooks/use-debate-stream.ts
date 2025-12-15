@@ -40,6 +40,7 @@ export function useDebateStream() {
   // Refs to avoid stale closures in timeout/reconnect callbacks
   const isStreamingRef = useRef(false);
   const reconnectAttemptsRef = useRef(0);
+  const isReconnectingRef = useRef(false); // Guard against concurrent reconnects
 
   // Sync refs with state
   useEffect(() => {
@@ -66,6 +67,9 @@ export function useDebateStream() {
 
   // Attempt reconnection with exponential backoff
   const attemptReconnect = useCallback(async () => {
+    // Guard against concurrent reconnection attempts
+    if (isReconnectingRef.current) return;
+
     const runId = currentRunIdRef.current;
     if (!runId) return;
 
@@ -81,28 +85,35 @@ export function useDebateStream() {
       return;
     }
 
-    // Increment attempts
-    const newAttempts = currentAttempts + 1;
-    reconnectAttemptsRef.current = newAttempts;
-    setState((prev) => ({
-      ...prev,
-      isReconnecting: true,
-      reconnectAttempts: newAttempts,
-    }));
+    // Set reconnecting guard
+    isReconnectingRef.current = true;
 
-    // Exponential backoff: 1s, 2s, 4s
-    const delay = Math.pow(2, newAttempts - 1) * 1000;
-    console.log(`Reconnecting in ${delay}ms (attempt ${newAttempts}/${MAX_RECONNECT_ATTEMPTS})`);
+    try {
+      // Increment attempts
+      const newAttempts = currentAttempts + 1;
+      reconnectAttemptsRef.current = newAttempts;
+      setState((prev) => ({
+        ...prev,
+        isReconnecting: true,
+        reconnectAttempts: newAttempts,
+      }));
 
-    await new Promise((resolve) => setTimeout(resolve, delay));
+      // Exponential backoff: 1s, 2s, 4s
+      const delay = Math.pow(2, newAttempts - 1) * 1000;
+      console.log(`Reconnecting in ${delay}ms (attempt ${newAttempts}/${MAX_RECONNECT_ATTEMPTS})`);
 
-    // Abort current connection if any
-    if (abortControllerRef.current) {
-      abortControllerRef.current.abort();
+      await new Promise((resolve) => setTimeout(resolve, delay));
+
+      // Abort current connection if any
+      if (abortControllerRef.current) {
+        abortControllerRef.current.abort();
+      }
+
+      // Resume stream (don't reset content, just continue)
+      startStreamInternal(runId, false);
+    } finally {
+      isReconnectingRef.current = false;
     }
-
-    // Resume stream (don't reset content, just continue)
-    startStreamInternal(runId, false);
   }, []); // No dependencies - uses refs
 
   // Internal stream start (with option to preserve content)

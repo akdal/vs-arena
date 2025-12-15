@@ -267,6 +267,10 @@ async def execute_debate_with_streaming(
 
                 # Execute node based on type
                 if node_name.startswith("score_") or node_name in ["judge_intro", "judge_verdict"]:
+                    # Send heartbeat before non-streaming judge operations
+                    # This maximizes timeout window for potentially slow LLM calls
+                    yield {"event": "heartbeat", "data": "{}"}
+
                     # Non-streaming judge operations
                     state = await _execute_judge_node(node_name, state, db)
 

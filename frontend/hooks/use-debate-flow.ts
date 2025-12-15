@@ -335,12 +335,16 @@ export function useDebateFlow({ run, onLayoutChange }: UseDebateFlowOptions) {
             } else if (eventType === "error") {
               try {
                 const data = JSON.parse(eventData);
-                setError(data.error || "Unknown error");
+                // Backend sends "message", also support legacy "error" field
+                setError(data.message || data.error || "Unknown error");
               } catch (e) {
                 setError("Stream error occurred");
               }
               setIsStreaming(false);
               break;
+            } else if (eventType === "heartbeat") {
+              // Heartbeat received - connection is alive, no UI update needed
+              continue;
             }
           }
         }
@@ -348,6 +352,12 @@ export function useDebateFlow({ run, onLayoutChange }: UseDebateFlowOptions) {
         // Stream finished successfully
         setIsStreaming(false);
       } catch (error) {
+        // Clear buffered tokens on error
+        tokenBufferRef.current = "";
+        if (rafIdRef.current) {
+          cancelAnimationFrame(rafIdRef.current);
+          rafIdRef.current = null;
+        }
         if (error instanceof Error) {
           // Ignore abort errors
           if (error.name !== "AbortError") {
