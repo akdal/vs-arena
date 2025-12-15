@@ -61,7 +61,8 @@ export type SSEEventType =
   | "score"
   | "verdict"
   | "run_complete"
-  | "error";
+  | "error"
+  | "heartbeat";
 
 export interface SSEEvent {
   event: SSEEventType;

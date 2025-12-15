@@ -37,50 +37,62 @@ export function useDebateStream() {
   const connectionTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const lastPhaseRef = useRef<DebatePhase | null>(null);
 
+  // Refs to avoid stale closures in timeout/reconnect callbacks
+  const isStreamingRef = useRef(false);
+  const reconnectAttemptsRef = useRef(0);
+
+  // Sync refs with state
+  useEffect(() => {
+    isStreamingRef.current = state.isStreaming;
+  }, [state.isStreaming]);
+
+  useEffect(() => {
+    reconnectAttemptsRef.current = state.reconnectAttempts;
+  }, [state.reconnectAttempts]);
+
   // Reset connection timeout (called on each received event)
   const resetConnectionTimeout = useCallback(() => {
     if (connectionTimeoutRef.current) {
       clearTimeout(connectionTimeoutRef.current);
     }
     connectionTimeoutRef.current = setTimeout(() => {
-      // Connection timed out - attempt reconnect
-      if (currentRunIdRef.current && state.isStreaming) {
+      // Connection timed out - attempt reconnect (use refs to avoid stale closure)
+      if (currentRunIdRef.current && isStreamingRef.current) {
         console.warn("SSE connection timeout, attempting reconnect...");
         attemptReconnect();
       }
     }, CONNECTION_TIMEOUT_MS);
-  }, [state.isStreaming]);
+  }, []); // No dependencies - uses refs
 
   // Attempt reconnection with exponential backoff
   const attemptReconnect = useCallback(async () => {
     const runId = currentRunIdRef.current;
     if (!runId) return;
 
-    setState((prev) => {
-      if (prev.reconnectAttempts >= MAX_RECONNECT_ATTEMPTS) {
-        return {
-          ...prev,
-          isStreaming: false,
-          isReconnecting: false,
-          error: "Connection lost after multiple reconnect attempts",
-        };
-      }
-      return {
+    // Use ref for current attempt count (avoids race condition)
+    const currentAttempts = reconnectAttemptsRef.current;
+    if (currentAttempts >= MAX_RECONNECT_ATTEMPTS) {
+      setState((prev) => ({
         ...prev,
-        isReconnecting: true,
-        reconnectAttempts: prev.reconnectAttempts + 1,
-      };
-    });
-
-    // Get current attempt count
-    const attempts = state.reconnectAttempts + 1;
-    if (attempts > MAX_RECONNECT_ATTEMPTS) {
+        isStreaming: false,
+        isReconnecting: false,
+        error: "Connection lost after multiple reconnect attempts",
+      }));
       return;
     }
 
+    // Increment attempts
+    const newAttempts = currentAttempts + 1;
+    reconnectAttemptsRef.current = newAttempts;
+    setState((prev) => ({
+      ...prev,
+      isReconnecting: true,
+      reconnectAttempts: newAttempts,
+    }));
+
     // Exponential backoff: 1s, 2s, 4s
-    const delay = Math.pow(2, attempts - 1) * 1000;
-    console.log(`Reconnecting in ${delay}ms (attempt ${attempts}/${MAX_RECONNECT_ATTEMPTS})`);
+    const delay = Math.pow(2, newAttempts - 1) * 1000;
+    console.log(`Reconnecting in ${delay}ms (attempt ${newAttempts}/${MAX_RECONNECT_ATTEMPTS})`);
 
     await new Promise((resolve) => setTimeout(resolve, delay));
 
@@ -91,7 +103,7 @@ export function useDebateStream() {
 
     // Resume stream (don't reset content, just continue)
     startStreamInternal(runId, false);
-  }, [state.reconnectAttempts]);
+  }, []); // No dependencies - uses refs
 
   // Internal stream start (with option to preserve content)
   const startStreamInternal = useCallback(async (runId: string, resetContent: boolean = true) => {
@@ -274,7 +286,8 @@ export function useDebateStream() {
               setState((prev) => ({
                 ...prev,
                 isStreaming: false,
-                error: data.error || "Unknown error",
+                // Backend sends "message", also support legacy "error" field
+                error: data.message || data.error || "Unknown error",
               }));
             } catch (e) {
               setState((prev) => ({

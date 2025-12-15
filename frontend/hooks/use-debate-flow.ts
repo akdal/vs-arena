@@ -372,6 +372,8 @@ export function useDebateFlow({ run, onLayoutChange }: UseDebateFlowOptions) {
   // Cleanup on unmount
   useEffect(() => {
     return () => {
+      // Clear token buffer to prevent stale content on remount
+      tokenBufferRef.current = "";
       // Cancel any pending RAF
       if (rafIdRef.current) {
         cancelAnimationFrame(rafIdRef.current);

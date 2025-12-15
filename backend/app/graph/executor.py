@@ -705,9 +705,11 @@ async def _execute_debater_node_with_streaming(
             all_debate_turns=all_turns
         )
 
-    # Stream generation
+    # Stream generation with periodic heartbeats
     turn_id = str(uuid4())
     content_chunks = []
+    last_heartbeat = time.time()
+    HEARTBEAT_INTERVAL = 15  # seconds
 
     try:
         async for chunk in stream_ollama_with_retry(
@@ -728,6 +730,11 @@ async def _execute_debater_node_with_streaming(
                     "content": chunk
                 })
             }
+
+            # Send heartbeat during long streaming phases
+            if time.time() - last_heartbeat > HEARTBEAT_INTERVAL:
+                yield {"event": "heartbeat", "data": "{}"}
+                last_heartbeat = time.time()
 
     except Exception as e:
         logger.error(f"Failed to generate {node_name}: {e}")
